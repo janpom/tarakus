@@ -270,6 +270,18 @@ input:focus-visible {
   font-weight: 600;
   color: var(--muted);
 }
+.labeled-row .row-label.stacked {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+  gap: 1px;
+}
+.row-label .rl-main { color: var(--text); }
+.row-label .rl-sub {
+  font-size: 0.72rem;
+  font-weight: 400;
+  color: var(--muted);
+}
 .labeled-row .row-meta {
   margin-left: 4px;
   font-weight: 400;
@@ -656,6 +668,39 @@ input:focus-visible {
   margin-top: 2px;
 }
 .oci-team.win .oci-num { color: var(--pos); }
+
+.shoz-slider {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px 10px;
+  background: var(--panel-lo);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+.shoz-readout {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+.shoz-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+.shoz-val {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+}
+.shoz-num {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text);
+}
+.shoz-max {
+  color: var(--muted-2);
+  font-size: 0.85rem;
+}
 
 .slider {
   -webkit-appearance: none;

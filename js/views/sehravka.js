@@ -316,41 +316,71 @@ function pagatValatVysledek(state, actions) {
     }
   };
 
+  const togU = (key, hl, cur) => (val) => {
+    setU(key, hl)(cur === val ? null : val);
+  };
+
   return field('Pagát a valát',
     h('div', { class: 'row-stack' },
       h('div', { class: 'labeled-row' },
-        h('span', { class: 'row-label' },
-          'Pagát', pagHl ? h('span', { class: 'row-meta' }, `· ${pagHl === 'vydr' ? 'vydr.' : 'obr.'}`) : null,
-        ),
+        pagatValatLabel('Pagát', pagHl),
         h('div', { class: 'chips' },
-          hlChip(pagU, null, '—', () => setU('pagat', pagHl)(null)),
-          hlChip(pagU, true, 'uhrán', () => setU('pagat', pagHl)(true)),
-          pagHl ? hlChip(pagU, false, 'neuhrán', () => setU('pagat', pagHl)(false)) : null,
+          hlChip(pagU, true, 'uhrán', () => togU('pagat', pagHl, pagU)(true)),
+          pagHl ? hlChip(pagU, false, 'neuhrán', () => togU('pagat', pagHl, pagU)(false)) : null,
         ),
       ),
       h('div', { class: 'labeled-row' },
-        h('span', { class: 'row-label' },
-          'Valát', valHl ? h('span', { class: 'row-meta' }, `· ${valHl === 'vydr' ? 'vydr.' : 'obr.'}`) : null,
-        ),
+        pagatValatLabel('Valát', valHl),
         h('div', { class: 'chips' },
-          hlChip(valU, null, '—', () => setU('valat', valHl)(null)),
-          hlChip(valU, true, 'uhrán', () => setU('valat', valHl)(true)),
-          valHl ? hlChip(valU, false, 'neuhrán', () => setU('valat', valHl)(false)) : null,
+          hlChip(valU, true, 'uhrán', () => togU('valat', valHl, valU)(true)),
+          valHl ? hlChip(valU, false, 'neuhrán', () => togU('valat', valHl, valU)(false)) : null,
         ),
       ),
       valU === true
-        ? h('div', { class: 'labeled-row' },
-            h('span', { class: 'row-label' }, 'Shoz protistrany'),
-            h('input', {
-              type: 'number', min: 0, max: 35, step: 1,
-              value: d.vysledek.shozProtiValat ?? 0,
-              oninput: (e) => actions.updateVysledek({
-                shozProtiValat: Math.max(0, Math.min(35, Number(e.target.value) || 0)),
-              }),
-            }),
+        ? shozSlider(
+            d.vysledek.shozProtiValat ?? 0,
+            shozMaxFor(d.type),
+            v => actions.updateVysledek({ shozProtiValat: v }),
           )
         : null,
     ),
+  );
+}
+
+// Maximum hodnoty shozu protistrany podle typu hry – počet karet × 5 b. honor.
+function pagatValatLabel(name, hlaseno) {
+  if (!hlaseno) {
+    return h('span', { class: 'row-label' }, `Tichý ${name.toLowerCase()}`);
+  }
+  return h('span', { class: 'row-label stacked' },
+    h('span', { class: 'rl-main' }, name),
+    h('span', { class: 'rl-sub' }, hlaseno === 'vydr' ? 'vydražitel' : 'obrana'),
+  );
+}
+
+function shozMaxFor(type) {
+  if (type === 'ctvrta') return 30;  // 6 talon karet
+  if (type === 'treti') return 15;   // 3 zbylé talon karty / odhoz
+  return 10;                          // 1./2.: 2 odhozené karty
+}
+
+function shozSlider(value, max, setVal) {
+  const clamped = Math.min(value, max);
+  const num = h('span', { class: 'shoz-num' }, clamped);
+  const maxLabel = h('span', { class: 'shoz-max' }, ` / ${max}`);
+  const slider = h('input', {
+    type: 'range', min: 0, max, step: 1, value: clamped, class: 'slider',
+  });
+  slider.addEventListener('input', () => {
+    num.textContent = Number(slider.value);
+  });
+  slider.addEventListener('change', () => setVal(Number(slider.value)));
+  return h('div', { class: 'shoz-slider' },
+    h('div', { class: 'shoz-readout' },
+      h('span', { class: 'shoz-label' }, 'Shoz protistrany'),
+      h('span', { class: 'shoz-val' }, num, maxLabel),
+    ),
+    slider,
   );
 }
 
