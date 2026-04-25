@@ -263,11 +263,14 @@ function stepVysledek(state, actions) {
 function vysledekNormal(state, actions) {
   const d = state.current;
   const ociT1 = d.vysledek?.ociT1 ?? 35;
+  const valatUhran = d.vysledek?.valat?.uhran === true;
   return h('div', { class: 'panel' },
-    field('Oči (součet 70)',
-      ociSlider(ociT1, 70, ['Vydražitel', 'Obrana'], v => actions.updateVysledek({ ociT1: v })),
-    ),
     pagatValatVysledek(state, actions),
+    !valatUhran
+      ? field('Oči (součet 70)',
+          ociSlider(ociT1, 70, ['Vydražitel', 'Obrana'], v => actions.updateVysledek({ ociT1: v })),
+        )
+      : null,
   );
 }
 
