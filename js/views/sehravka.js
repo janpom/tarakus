@@ -329,15 +329,15 @@ function pagatValatVysledek(state, actions) {
       h('div', { class: 'labeled-row' },
         pagatValatLabel('Pagát', pagP, players),
         h('div', { class: 'chips' },
-          hlChip(pagU, true, 'uhrán', () => togU('pagat', pagP, pagU)(true)),
-          pagP != null ? hlChip(pagU, false, 'neuhrán', () => togU('pagat', pagP, pagU)(false)) : null,
+          hlChip(pagU, true, 'uhraný', () => togU('pagat', pagP, pagU)(true)),
+          pagP != null ? hlChip(pagU, false, 'neuhraný', () => togU('pagat', pagP, pagU)(false)) : null,
         ),
       ),
       h('div', { class: 'labeled-row' },
         pagatValatLabel('Valát', valP, players),
         h('div', { class: 'chips' },
-          hlChip(valU, true, 'uhrán', () => togU('valat', valP, valU)(true)),
-          valP != null ? hlChip(valU, false, 'neuhrán', () => togU('valat', valP, valU)(false)) : null,
+          hlChip(valU, true, 'uhraný', () => togU('valat', valP, valU)(true)),
+          valP != null ? hlChip(valU, false, 'neuhraný', () => togU('valat', valP, valU)(false)) : null,
         ),
       ),
       valU === true
@@ -488,8 +488,8 @@ export function validateStep(stepId, state) {
   if (stepId === 'vysledek') {
     if (d.type === 'varsava') return null;
     if ((d.type === 'prvni' || d.type === 'druha') && d.partner == null) return 'Vyber partnera.';
-    if (d.vysledek?.pagat?.player != null && d.vysledek.pagat.uhran == null) return 'Pagát: uhrán nebo neuhrán?';
-    if (d.vysledek?.valat?.player != null && d.vysledek.valat.uhran == null) return 'Valát: uhrán nebo neuhrán?';
+    if (d.vysledek?.pagat?.player != null && d.vysledek.pagat.uhran == null) return 'Pagát: uhraný nebo neuhraný?';
+    if (d.vysledek?.valat?.player != null && d.vysledek.valat.uhran == null) return 'Valát: uhraný nebo neuhraný?';
     if (d.vysledek?.valat?.uhran === true && d.vysledek?.shozProtiValat == null) return 'Zadej shoz při valátu.';
     return null;
   }

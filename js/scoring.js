@@ -82,18 +82,20 @@ export function scoreSehravka(input, players) {
   const valatOppo = valatTeam === team1 ? team2 : team1;
 
   if (valat?.uhran === true) {
-    const diff = Math.max(0, 35 - (shozProtiValat ?? 0));
+    const shoz = shozProtiValat ?? 0;
+    const diff = Math.max(0, 35 - shoz);
     hodnotaHry = Math.min(diff * s * mHry, HERNI_STROP_HAL);
     gameWinners = valatTeam;
     gameLosers = valatOppo;
-    gameLabel = `Hra (valát uhrán${flekSuffix(flekHry)})`;
+    const ociT1Eff = valatTeam === team1 ? 70 - shoz : shoz;
+    gameLabel = `Hra (${ociT1Eff}:${70 - ociT1Eff}${flekSuffix(flekHry)})`;
   } else if (valat?.uhran === false) {
     // Valát selhal → hru vyhrává protistrana valátu
     const diff = Math.abs(ociT1 - 35) || 1;
     hodnotaHry = Math.min(diff * s * mHry, HERNI_STROP_HAL);
     gameWinners = valatOppo;
     gameLosers = valatTeam;
-    gameLabel = `Hra (valát selhal${flekSuffix(flekHry)})`;
+    gameLabel = `Hra (${ociT1}:${70 - ociT1}${flekSuffix(flekHry)})`;
   } else {
     const diff = Math.abs(ociT1 - 35);
     const effDiff = diff === 0 ? 1 : diff;
@@ -128,7 +130,7 @@ export function scoreSehravka(input, players) {
     const losers = uhran ? pagatOppo : pagatTeam;
     addDelta(delta, splitPayment(winners, losers, val));
     rows.push({
-      label: `Pagát ${ticky ? 'tichý' : 'hlášený'} ${uhran ? 'uhrán' : 'neuhrán'}${ticky ? '' : flekSuffix(flekPagat)}`,
+      label: `Pagát ${ticky ? 'tichý' : 'hlášený'} ${uhran ? 'uhraný' : 'neuhraný'}${ticky ? '' : flekSuffix(flekPagat)}`,
       value: val, winners, losers,
     });
   }
@@ -143,7 +145,7 @@ export function scoreSehravka(input, players) {
     const losers = uhran ? valatOppo : valatTeam;
     addDelta(delta, splitPayment(winners, losers, val));
     rows.push({
-      label: `Valát ${ticky ? 'tichý' : 'hlášený'} ${uhran ? 'uhrán' : 'neuhrán'}${ticky ? '' : flekSuffix(flekValat)} (prémie)`,
+      label: `Valát ${ticky ? 'tichý' : 'hlášený'} ${uhran ? 'uhraný' : 'neuhraný'}${ticky ? '' : flekSuffix(flekValat)}`,
       value: val, winners, losers,
     });
   }
