@@ -933,6 +933,86 @@ input::placeholder { color: var(--muted-2); }
 
 .summary .actions { margin-top: auto; }
 
+/* ---------- iOS-style alert dialog ---------- */
+.dialog-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  -webkit-backdrop-filter: blur(2px);
+  backdrop-filter: blur(2px);
+  display: grid;
+  place-items: center;
+  z-index: 100;
+  padding: 16px;
+  animation: dlgFade 0.15s ease-out;
+}
+@keyframes dlgFade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.dialog-card {
+  width: 100%;
+  max-width: 270px;
+  background: rgba(45, 45, 47, 0.92);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  backdrop-filter: blur(20px) saturate(180%);
+  border-radius: 14px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  animation: dlgPop 0.18s ease-out;
+}
+@keyframes dlgPop {
+  from { opacity: 0; transform: scale(0.92); }
+  to { opacity: 1; transform: scale(1); }
+}
+.dialog-body {
+  padding: 18px 16px 14px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.dialog-title {
+  font-size: 17px;
+  font-weight: 600;
+  color: #fff;
+  letter-spacing: -0.01em;
+}
+.dialog-message {
+  font-size: 13px;
+  color: rgba(235, 235, 245, 0.78);
+  line-height: 1.35;
+}
+.dialog-actions {
+  display: flex;
+  gap: 8px;
+  padding: 4px 14px 14px;
+}
+.dialog-actions.stack {
+  flex-direction: column;
+}
+.dialog-btn {
+  flex: 1;
+  background: var(--chip-bg);
+  border: none;
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--text);
+  min-height: 44px;
+  min-width: 0;
+}
+.dialog-btn.confirm {
+  background: var(--primary);
+  color: #fff;
+  font-weight: 600;
+}
+.dialog-btn.confirm.destructive {
+  background: var(--neg);
+}
+
 /* ---------- Wide viewport tweaks ---------- */
 @media (min-width: 520px) {
   #app { padding: 0 24px; max-width: 560px; }

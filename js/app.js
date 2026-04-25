@@ -1,13 +1,15 @@
 import { load, save, reset, nextPovinnost, setMode } from './state.js';
 import { GAME_LABELS, HLASKA_GROUPS, TRUL_COMPAT } from './constants.js';
 import { scoreSehravka } from './scoring.js';
-import { mount } from './ui.js';
+import { h, mount } from './ui.js';
 import { viewSetup } from './views/setup.js';
 import { viewMain } from './views/main.js';
 import { viewSehravka } from './views/sehravka.js';
 import { viewSummary } from './views/summary.js';
+import { viewDialog } from './views/dialog.js';
 
 let state = load();
+let dialog = null;
 
 const root = document.getElementById('app');
 
@@ -24,8 +26,26 @@ function render() {
   } else {
     view = viewMain(state, actions);
   }
+  if (dialog) {
+    view = h('div', { class: 'app-root' }, view, viewDialog(dialog, dialogActions));
+  }
   mount(root, view);
 }
+
+function showDialog(opts) {
+  dialog = opts;
+  render();
+}
+
+const dialogActions = {
+  close() { dialog = null; render(); },
+  confirm() {
+    const onConfirm = dialog?.onConfirm;
+    dialog = null;
+    render();
+    onConfirm?.();
+  },
+};
 
 const actions = {
   startGame(names, mode) {
@@ -42,12 +62,19 @@ const actions = {
   },
 
   resetGame() {
-    if (!confirm('Opravdu začít novou hru? Aktuální skóre bude smazáno.')) return;
-    const prev = state.players;
-    reset();
-    state = load();
-    state.previousPlayers = prev;
-    render();
+    showDialog({
+      title: 'Začít novou hru?',
+      message: 'Aktuální skóre i historie sehrávek budou smazány.',
+      confirmLabel: 'Začít znovu',
+      destructive: true,
+      onConfirm: () => {
+        const prev = state.players;
+        reset();
+        state = load();
+        state.previousPlayers = prev;
+        render();
+      },
+    });
   },
 
   startSehravka() {
@@ -97,9 +124,17 @@ const actions = {
   },
 
   cancelSehravka() {
-    if (!confirm('Zrušit rozpracovanou sehrávku?')) return;
-    state.current = null;
-    render();
+    showDialog({
+      title: 'Zrušit sehrávku?',
+      message: 'Zadané údaje nebudou uloženy.',
+      confirmLabel: 'Zrušit sehrávku',
+      cancelLabel: 'Pokračovat',
+      destructive: true,
+      onConfirm: () => {
+        state.current = null;
+        render();
+      },
+    });
   },
 
   updateDraft(patch) {
