@@ -37,12 +37,12 @@ export function reset() {
   localStorage.removeItem(KEY);
 }
 
-// Rotace povinnosti proti směru hodinových ručiček
+// Rotace povinnosti proti směru hodinových ručiček.
 // Grid 2×2 — indexy rozmístěné takto:
-//   0   1
-//   3   2
-// CCW pořadí: 0 → 3 → 2 → 1 → 0
-export const CCW_ORDER = [0, 3, 2, 1];
+//   0   3
+//   1   2
+// CCW pořadí: 0 → 1 → 2 → 3 → 0
+export const CCW_ORDER = [0, 1, 2, 3];
 
 export function nextPovinnost(idx) {
   const i = CCW_ORDER.indexOf(idx);
