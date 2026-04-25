@@ -89,7 +89,6 @@ function stepDrazba(state, actions) {
 
     d.type && !isVarsava ? vydrazitelField(state, actions) : null,
 
-    (d.type === 'prvni' || d.type === 'druha') ? partnerField(state, actions) : null,
     d.type === 'treti' ? talonField(state, actions) : null,
   );
 }
@@ -143,38 +142,36 @@ function talonField(state, actions) {
 
 function zavazujiciField(state, actions) {
   const d = state.current;
-  const setHl = (key) => (val) => {
+  const players = state.players;
+  const setPlayer = (key) => (id) => {
     const cur = d.vysledek?.[key] ?? null;
-    const curHl = cur?.hlaseno ?? null;
-    // Druhé kliknutí na stejný chip = odznačit.
-    const newHl = curHl === val ? null : val;
-    if (newHl === null) {
-      if (cur?.uhran === true) actions.updateVysledek({ [key]: { uhran: true, hlaseno: null } });
+    const curId = cur?.player ?? null;
+    const newId = curId === id ? null : id;
+    if (newId === null) {
+      if (cur?.uhran === true) actions.updateVysledek({ [key]: { uhran: true, player: null } });
       else actions.updateVysledek({ [key]: null });
     } else {
-      actions.updateVysledek({ [key]: { uhran: cur?.uhran ?? null, hlaseno: newHl } });
+      actions.updateVysledek({ [key]: { uhran: cur?.uhran ?? null, player: newId } });
     }
   };
-  const pagHl = d.vysledek?.pagat?.hlaseno ?? null;
-  const valHl = d.vysledek?.valat?.hlaseno ?? null;
+  const pagP = d.vysledek?.pagat?.player ?? null;
+  const valP = d.vysledek?.valat?.player ?? null;
   const druha = d.type === 'druha';
+  const playerChips = (curId, onPick) => h('div', { class: 'chips' },
+    ...players.map((name, i) => hlChip(curId, i, name, () => onPick(i))),
+  );
   return field('Zavazující hlášky',
     h('div', { class: 'row-stack' },
       h('div', { class: 'labeled-row' },
         h('span', { class: 'row-label' }, 'Pagát'),
         druha
-          ? h('span', { class: 'row-info' }, 'vydražitel (povinně)')
-          : h('div', { class: 'chips' },
-              hlChip(pagHl, 'vydr', 'vydražitel', () => setHl('pagat')('vydr')),
-              hlChip(pagHl, 'prot', 'obrana', () => setHl('pagat')('prot')),
-            ),
+          ? h('span', { class: 'row-info' },
+              d.vydrazitel != null ? `${players[d.vydrazitel]} (povinně)` : 'vydražitel (povinně)')
+          : playerChips(pagP, setPlayer('pagat')),
       ),
       h('div', { class: 'labeled-row' },
         h('span', { class: 'row-label' }, 'Valát'),
-        h('div', { class: 'chips' },
-          hlChip(valHl, 'vydr', 'vydražitel', () => setHl('valat')('vydr')),
-          hlChip(valHl, 'prot', 'obrana', () => setHl('valat')('prot')),
-        ),
+        playerChips(valP, setPlayer('valat')),
       ),
     ),
   );
@@ -184,8 +181,8 @@ function zavazujiciField(state, actions) {
 function stepHlaskyFleky(state, actions) {
   const d = state.current;
   const tabIdx = d.hlaskyTab ?? 0;
-  const pagHl = d.vysledek?.pagat?.hlaseno ?? null;
-  const valHl = d.vysledek?.valat?.hlaseno ?? null;
+  const pagHl = d.vysledek?.pagat?.player != null;
+  const valHl = d.vysledek?.valat?.player != null;
 
   return h('div', { class: 'panel' },
     // Prozrazující hlášky — tabs
@@ -265,7 +262,9 @@ function vysledekNormal(state, actions) {
   const d = state.current;
   const ociT1 = d.vysledek?.ociT1 ?? 35;
   const valatUhran = d.vysledek?.valat?.uhran === true;
+  const needsPartner = d.type === 'prvni' || d.type === 'druha';
   return h('div', { class: 'panel' },
+    needsPartner ? partnerField(state, actions) : null,
     pagatValatVysledek(state, actions),
     !valatUhran
       ? field('Oči (součet 70)',
@@ -306,38 +305,39 @@ function ociSlider(value, total, labels, setVal) {
 
 function pagatValatVysledek(state, actions) {
   const d = state.current;
-  const pagHl = d.vysledek?.pagat?.hlaseno ?? null;
-  const valHl = d.vysledek?.valat?.hlaseno ?? null;
+  const players = state.players;
+  const pagP = d.vysledek?.pagat?.player ?? null;
+  const valP = d.vysledek?.valat?.player ?? null;
   const pagU = d.vysledek?.pagat?.uhran ?? null;
   const valU = d.vysledek?.valat?.uhran ?? null;
 
-  const setU = (key, hl) => (uhran) => {
+  const setU = (key, p) => (uhran) => {
     if (uhran === null) {
-      if (hl) actions.updateVysledek({ [key]: { uhran: null, hlaseno: hl } });
+      if (p != null) actions.updateVysledek({ [key]: { uhran: null, player: p } });
       else actions.updateVysledek({ [key]: null });
     } else {
-      actions.updateVysledek({ [key]: { uhran, hlaseno: hl } });
+      actions.updateVysledek({ [key]: { uhran, player: p } });
     }
   };
 
-  const togU = (key, hl, cur) => (val) => {
-    setU(key, hl)(cur === val ? null : val);
+  const togU = (key, p, cur) => (val) => {
+    setU(key, p)(cur === val ? null : val);
   };
 
   return field('Pagát a valát',
     h('div', { class: 'row-stack' },
       h('div', { class: 'labeled-row' },
-        pagatValatLabel('Pagát', pagHl),
+        pagatValatLabel('Pagát', pagP, players),
         h('div', { class: 'chips' },
-          hlChip(pagU, true, 'uhrán', () => togU('pagat', pagHl, pagU)(true)),
-          pagHl ? hlChip(pagU, false, 'neuhrán', () => togU('pagat', pagHl, pagU)(false)) : null,
+          hlChip(pagU, true, 'uhrán', () => togU('pagat', pagP, pagU)(true)),
+          pagP != null ? hlChip(pagU, false, 'neuhrán', () => togU('pagat', pagP, pagU)(false)) : null,
         ),
       ),
       h('div', { class: 'labeled-row' },
-        pagatValatLabel('Valát', valHl),
+        pagatValatLabel('Valát', valP, players),
         h('div', { class: 'chips' },
-          hlChip(valU, true, 'uhrán', () => togU('valat', valHl, valU)(true)),
-          valHl ? hlChip(valU, false, 'neuhrán', () => togU('valat', valHl, valU)(false)) : null,
+          hlChip(valU, true, 'uhrán', () => togU('valat', valP, valU)(true)),
+          valP != null ? hlChip(valU, false, 'neuhrán', () => togU('valat', valP, valU)(false)) : null,
         ),
       ),
       valU === true
@@ -351,14 +351,13 @@ function pagatValatVysledek(state, actions) {
   );
 }
 
-// Maximum hodnoty shozu protistrany podle typu hry – počet karet × 5 b. honor.
-function pagatValatLabel(name, hlaseno) {
-  if (!hlaseno) {
+function pagatValatLabel(name, player, players) {
+  if (player == null) {
     return h('span', { class: 'row-label' }, `Tichý ${name.toLowerCase()}`);
   }
   return h('span', { class: 'row-label stacked' },
     h('span', { class: 'rl-main' }, name),
-    h('span', { class: 'rl-sub' }, hlaseno === 'vydr' ? 'vydražitel' : 'obrana'),
+    h('span', { class: 'rl-sub' }, players[player]),
   );
 }
 
@@ -482,15 +481,15 @@ export function validateStep(stepId, state) {
     if (!d.type) return 'Vyber typ hry.';
     if (d.type === 'varsava') return null;
     if (d.vydrazitel == null) return 'Vyber vydražitele.';
-    if ((d.type === 'prvni' || d.type === 'druha') && d.partner == null) return 'Vyber partnera.';
     if (d.type === 'treti' && !d.tretiPozice) return 'Vyber pozici talonu.';
     return null;
   }
   if (stepId === 'hlasky') return null;
   if (stepId === 'vysledek') {
     if (d.type === 'varsava') return null;
-    if (d.vysledek?.pagat?.hlaseno && d.vysledek.pagat.uhran == null) return 'Pagát: uhrán nebo neuhrán?';
-    if (d.vysledek?.valat?.hlaseno && d.vysledek.valat.uhran == null) return 'Valát: uhrán nebo neuhrán?';
+    if ((d.type === 'prvni' || d.type === 'druha') && d.partner == null) return 'Vyber partnera.';
+    if (d.vysledek?.pagat?.player != null && d.vysledek.pagat.uhran == null) return 'Pagát: uhrán nebo neuhrán?';
+    if (d.vysledek?.valat?.player != null && d.vysledek.valat.uhran == null) return 'Valát: uhrán nebo neuhrán?';
     if (d.vysledek?.valat?.uhran === true && d.vysledek?.shozProtiValat == null) return 'Zadej shoz při valátu.';
     return null;
   }

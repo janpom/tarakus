@@ -109,7 +109,7 @@ function sumDelta(d) { return Object.values(d).reduce((a, b) => a + b, 0); }
     tretiPozice: null, hlasky: {}, flekHry: 0, flekPagat: 0, flekValat: 0,
     vysledek: {
       ociT1: 50,
-      pagat: { uhran: true, hlaseno: 'vydr' },
+      pagat: { uhran: true, player: 0 },
       valat: null, shozProtiValat: 0,
     },
   }, players);

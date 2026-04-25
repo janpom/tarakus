@@ -75,7 +75,10 @@ export function scoreSehravka(input, players) {
 
   // Kdo vyhrál hru?
   let gameWinners, gameLosers, hodnotaHry, gameLabel;
-  const valatTeam = valat ? (valat.hlaseno === 'prot' ? team2 : team1) : null;
+  const teamOf = (playerId) => team1.includes(playerId) ? team1 : team2;
+  const valatTeam = valat
+    ? (valat.player != null ? teamOf(valat.player) : team1)
+    : null;
   const valatOppo = valatTeam === team1 ? team2 : team1;
 
   if (valat?.uhran === true) {
@@ -115,8 +118,8 @@ export function scoreSehravka(input, players) {
 
   // --- Pagát ---
   if (pagat && pagat.uhran != null) {
-    const ticky = !pagat.hlaseno;
-    const pagatTeam = pagat.hlaseno === 'prot' ? team2 : team1;
+    const ticky = pagat.player == null;
+    const pagatTeam = ticky ? team1 : teamOf(pagat.player);
     const pagatOppo = pagatTeam === team1 ? team2 : team1;
     const baseKc = ticky ? PAGAT_TICHY_KC : PAGAT_HLASENY_KC;
     const val = baseKc * KC * flekMult(ticky ? 0 : flekPagat);
@@ -132,7 +135,7 @@ export function scoreSehravka(input, players) {
 
   // --- Valát prémie (nad rámec hodnoty hry) ---
   if (valat && valat.uhran != null) {
-    const ticky = !valat.hlaseno;
+    const ticky = valat.player == null;
     const baseKc = ticky ? VALAT_TICHY_KC : VALAT_HLASENY_KC;
     const val = baseKc * KC * flekMult(ticky ? 0 : flekValat);
     const uhran = valat.uhran;

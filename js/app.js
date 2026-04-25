@@ -32,6 +32,14 @@ function render() {
   mount(root, view);
 }
 
+function syncDruhaPagat(draft) {
+  const curPag = draft.vysledek?.pagat ?? null;
+  draft.vysledek = {
+    ...draft.vysledek,
+    pagat: { uhran: curPag?.uhran ?? null, player: draft.vydrazitel ?? null },
+  };
+}
+
 function showDialog(opts) {
   dialog = opts;
   render();
@@ -139,6 +147,9 @@ const actions = {
 
   updateDraft(patch) {
     Object.assign(state.current, patch);
+    if ('vydrazitel' in patch && state.current.type === 'druha') {
+      syncDruhaPagat(state.current);
+    }
     if ('type' in patch) {
       const t = patch.type;
       if (t !== 'prvni' && t !== 'druha') {
@@ -162,11 +173,7 @@ const actions = {
           state.current.vydrazitel = null;
         }
         // Pagát vždy hlásí vydražitel (závazek 2. povinnosti).
-        const curPag = state.current.vysledek?.pagat ?? null;
-        state.current.vysledek = {
-          ...state.current.vysledek,
-          pagat: { uhran: curPag?.uhran ?? null, hlaseno: 'vydr' },
-        };
+        syncDruhaPagat(state.current);
       } else if (state.current.vydrazitel == null) {
         state.current.vydrazitel = state.current.forhont;
       }
