@@ -16,7 +16,7 @@ const EMPTY = {
   povinnostIdx: 0,
   sehravky: [],
   current: null,
-  mode: 'kc',              // 'kc' | 'body' (5 hal = 1 bod)
+  mode: 'body',            // 'kc' | 'body' (5 hal = 1 bod)
 };
 
 export function load() {

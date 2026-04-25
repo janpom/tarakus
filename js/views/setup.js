@@ -2,7 +2,7 @@ import { h } from '../ui.js';
 
 export function viewSetup(state, actions) {
   const inputs = [];
-  let mode = state.mode ?? 'kc';
+  let mode = state.mode ?? 'body';
 
   const submit = (e) => {
     e.preventDefault();
@@ -14,8 +14,8 @@ export function viewSetup(state, actions) {
   const modeChips = h('div', { class: 'chips chips-equal' });
   function renderModeChips() {
     modeChips.replaceChildren(
-      modeChip('kc', 'Koruny'),
       modeChip('body', 'Body'),
+      modeChip('kc', 'Koruny'),
     );
   }
   function modeChip(val, label) {

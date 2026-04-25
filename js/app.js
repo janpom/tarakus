@@ -60,7 +60,7 @@ const actions = {
     state = {
       ...state,
       players: names,
-      mode: mode === 'body' ? 'body' : 'kc',
+      mode: mode === 'kc' ? 'kc' : 'body',
       totals: [0, 0, 0, 0],
       povinnostIdx: 0,
       sehravky: [],
@@ -77,9 +77,11 @@ const actions = {
       destructive: true,
       onConfirm: () => {
         const prev = state.players;
+        const prevMode = state.mode;
         reset();
         state = load();
         state.previousPlayers = prev;
+        state.mode = prevMode ?? 'body';
         render();
       },
     });
