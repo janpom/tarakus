@@ -7,13 +7,20 @@ export const GAME_TYPES = {
   VARSAVA: 'varsava',
 };
 
-export const GAME_LABELS = {
-  prvni: '1. povinnost',
-  druha: '2. povinnost',
-  treti: '3. povinnost (preferanc)',
-  ctvrta: '4. povinnost (sólo)',
-  varsava: 'Varšava',
+// Pro každý typ: short = krátký název do chipu, alt = alternativní název (preferanc, sólo),
+// full = úplný název pro souhrny a historii.
+export const GAME_INFO = {
+  prvni:   { short: 'První',   alt: null,         full: 'První povinnost' },
+  druha:   { short: 'Druhá',   alt: null,         full: 'Druhá povinnost' },
+  treti:   { short: 'Třetí',   alt: 'preferanc',  full: 'Třetí povinnost' },
+  ctvrta:  { short: 'Čtvrtá',  alt: 'sólo',       full: 'Čtvrtá povinnost' },
+  varsava: { short: 'Varšava', alt: null,         full: 'Varšava' },
 };
+
+// Plné popisky pro souhrny a historii.
+export const GAME_LABELS = Object.fromEntries(
+  Object.entries(GAME_INFO).map(([k, v]) => [k, v.full]),
+);
 
 // Sazby v haléřích za jedno oko nad 35 (základní, bez fleku)
 export const RATE_HAL = {

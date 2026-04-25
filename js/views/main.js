@@ -1,5 +1,6 @@
 import { h } from '../ui.js';
 import { formatHal } from '../state.js';
+import { GAME_INFO } from '../constants.js';
 
 export function viewMain(state, actions) {
   const povId = state.povinnostIdx;
@@ -27,7 +28,7 @@ export function viewMain(state, actions) {
             ...state.sehravky.slice().reverse().map((s, idx) => h('li', {},
               h('span', { class: 'hist-label' },
                 `#${state.sehravky.length - idx} `,
-                s.typeLabel,
+                GAME_INFO[s.type]?.short ?? s.typeLabel,
                 s.vydrazitel != null ? ` · ${state.players[s.vydrazitel]}` : '',
               ),
               h('span', { class: 'hist-deltas' },

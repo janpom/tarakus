@@ -206,6 +206,18 @@ input:focus-visible {
 }
 .chip.lbl.active .lbl-sub { color: rgba(255,255,255,0.75); }
 
+/* Typ hry – krátký název + kurzíva alt name */
+.type-chips .chip.lbl { min-height: 54px; justify-content: center; }
+.type-chips .lbl-main { font-size: 1rem; font-weight: 600; }
+.type-chips .lbl-sub {
+  font-family: var(--font);
+  font-style: italic;
+  font-size: 0.72rem;
+  color: var(--muted);
+  font-weight: 400;
+}
+.type-chips .chip.lbl.active .lbl-sub { color: rgba(255, 255, 255, 0.7); }
+
 .info-chip {
   display: inline-flex;
   align-items: center;

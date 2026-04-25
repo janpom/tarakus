@@ -1,6 +1,6 @@
 import { h } from '../ui.js';
 import {
-  GAME_LABELS, MALE_HLASKY, VELKE_HLASKY, FLEK_LABELS, TRETI_POZICE,
+  GAME_INFO, MALE_HLASKY, VELKE_HLASKY, FLEK_LABELS, TRETI_POZICE,
 } from '../constants.js';
 
 const STEPS_NORMAL = [
@@ -68,13 +68,16 @@ function stepDrazba(state, actions) {
   const isVarsava = d.type === 'varsava';
 
   return h('div', { class: 'panel' },
-    field('Typ hry',
-      h('div', { class: 'chips wrap-2' },
-        ...Object.entries(GAME_LABELS).map(([k, label]) => h('button', {
-          class: `chip ${d.type === k ? 'active' : ''}`,
+    field('Typ hry (povinnost)',
+      h('div', { class: 'chips wrap-2 type-chips' },
+        ...Object.entries(GAME_INFO).map(([k, info]) => h('button', {
+          class: `chip lbl ${d.type === k ? 'active' : ''}`,
           type: 'button',
           onclick: () => actions.updateDraft({ type: k }),
-        }, label)),
+        },
+          h('span', { class: 'lbl-main' }, info.short),
+          info.alt ? h('span', { class: 'lbl-sub' }, info.alt) : null,
+        )),
       ),
     ),
 
