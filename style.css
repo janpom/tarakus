@@ -26,7 +26,7 @@
   --shadow-1: 0 1px 2px rgba(0,0,0,0.25);
   --shadow-2: 0 4px 16px rgba(0,0,0,0.4);
   --font: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif;
-  --mono: "SF Mono", Menlo, ui-monospace, monospace;
+  --mono: "JetBrains Mono", "SF Mono", Menlo, ui-monospace, monospace;
 }
 
 * { box-sizing: border-box; }
@@ -493,7 +493,7 @@ input:focus-visible {
   display: grid;
   grid-template-columns: repeat(2, auto);
   grid-template-rows: repeat(2, auto);
-  gap: 2px 8px;
+  gap: 2px 16px;
 }
 .hist-cell {
   font-family: var(--mono);

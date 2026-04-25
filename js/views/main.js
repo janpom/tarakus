@@ -3,8 +3,9 @@ import { formatHal } from '../state.js';
 import { GAME_INFO } from '../constants.js';
 
 function historyItem(s, num, players) {
+  const prefix = num < 10 ? ' #' : '#';
   return h('li', { class: 'hist-item' },
-    h('div', { class: 'hist-num' }, `#${num}`),
+    h('div', { class: 'hist-num' }, `${prefix}${num}`),
     h('div', { class: 'hist-meta' },
       h('div', { class: 'hist-type' }, GAME_INFO[s.type]?.short ?? s.typeLabel),
       h('div', { class: 'hist-forhont' }, players[s.forhont]),
