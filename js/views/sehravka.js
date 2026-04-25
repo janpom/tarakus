@@ -389,30 +389,66 @@ function shozSlider(value, max, setVal) {
 
 function vysledekVarsava(state, actions) {
   const d = state.current;
-  const oci = d.vysledek?.ociHrace ?? [0, 0, 0, 0];
-  const sum = oci.reduce((a, b) => a + b, 0);
+  const oci = d.vysledek?.ociHrace ?? [0, 0, 0, 70];
   return h('div', { class: 'panel' },
     field('Oči hráčů (součet 70)',
       h('div', { class: 'varsava-grid' },
-        ...state.players.map((name, i) => h('div', {
-          class: `varsava-row ${i === d.forhont ? 'forhont' : ''}`,
-        },
-          h('span', { class: 'v-name' }, name, i === d.forhont ? h('span', { class: 'badge-inline' }, 'F') : null),
-          h('input', {
-            type: 'number', min: 0, max: 70, step: 1,
-            value: oci[i],
-            oninput: (e) => {
-              const v = Math.max(0, Math.min(70, Number(e.target.value) || 0));
-              const next = oci.slice();
-              next[i] = v;
-              actions.updateVysledek({ ociHrace: next });
-            },
-          }),
-        )),
+        ...state.players.map((name, i) => varsavaSlider(state, actions, i, name, oci)),
       ),
-      h('div', { class: `sum-indicator ${sum === 70 ? 'ok' : 'err'}` }, `Σ ${sum} / 70`),
     ),
   );
+}
+
+function varsavaSlider(state, actions, idx, name, oci) {
+  const value = oci[idx];
+  const num = h('span', { class: 'varsava-num' }, value);
+  const slider = h('input', {
+    type: 'range', min: 0, max: 70, step: 1, value, class: 'slider',
+  });
+  slider.addEventListener('input', () => {
+    num.textContent = Number(slider.value);
+  });
+  slider.addEventListener('change', () => {
+    const next = rebalanceOci(oci, idx, Number(slider.value), 70);
+    actions.updateVysledek({ ociHrace: next });
+  });
+  return h('div', { class: 'varsava-row' },
+    h('div', { class: 'varsava-content' },
+      h('span', { class: 'v-name' }, name),
+      slider,
+    ),
+    num,
+  );
+}
+
+// Posun slideru hráče idx na newValue. Ostatní sliders se přerozdělí od posledního
+// k prvnímu, aby součet zůstal total.
+function rebalanceOci(values, idx, newValue, total) {
+  const result = values.slice();
+  const old = result[idx];
+  result[idx] = Math.max(0, Math.min(total, newValue));
+  let diff = result[idx] - old;
+  const others = [0, 1, 2, 3].filter(i => i !== idx).sort((a, b) => b - a); // descending
+  if (diff > 0) {
+    let take = diff;
+    for (const i of others) {
+      const t = Math.min(result[i], take);
+      result[i] -= t;
+      take -= t;
+      if (!take) break;
+    }
+    if (take > 0) result[idx] -= take;
+  } else if (diff < 0) {
+    let add = -diff;
+    for (const i of others) {
+      const space = total - result[i];
+      const a = Math.min(space, add);
+      result[i] += a;
+      add -= a;
+      if (!add) break;
+    }
+  }
+  return result;
 }
 
 // ===== helpers =====
@@ -447,11 +483,7 @@ export function validateStep(stepId, state) {
   }
   if (stepId === 'hlasky') return null;
   if (stepId === 'vysledek') {
-    if (d.type === 'varsava') {
-      const sum = (d.vysledek?.ociHrace ?? []).reduce((a, b) => a + b, 0);
-      if (sum !== 70) return `Součet očí: ${sum}/70.`;
-      return null;
-    }
+    if (d.type === 'varsava') return null;
     if (d.vysledek?.pagat?.hlaseno && d.vysledek.pagat.uhran == null) return 'Pagát: uhrán nebo neuhrán?';
     if (d.vysledek?.valat?.hlaseno && d.vysledek.valat.uhran == null) return 'Valát: uhrán nebo neuhrán?';
     if (d.vysledek?.valat?.uhran === true && d.vysledek?.shozProtiValat == null) return 'Zadej shoz při valátu.';

@@ -741,20 +741,32 @@ input:focus-visible {
   gap: 6px;
 }
 .varsava-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 6px 10px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 12px;
+  align-items: stretch;
+  padding: 8px 10px;
   background: var(--panel-lo);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
 }
-.varsava-row.forhont { border-color: var(--accent); }
-.v-name {
-  flex: 1;
-  font-weight: 500;
+.varsava-content {
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+.v-name { font-weight: 500; }
+.varsava-num {
+  font-family: var(--mono);
+  font-size: 1.6rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  display: grid;
+  place-items: center;
+  min-width: 56px;
+  color: var(--text);
 }
 
 .sum-indicator {

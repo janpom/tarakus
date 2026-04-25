@@ -110,6 +110,12 @@ const actions = {
       if (t !== 'treti') state.current.tretiPozice = null;
       if (t === 'varsava') {
         state.current.vydrazitel = null;
+        // Inicializuj oči Varšavy tak, aby součet byl 70 (default 0/0/0/70).
+        const oci = state.current.vysledek?.ociHrace ?? [0, 0, 0, 0];
+        const sum = oci.reduce((a, b) => a + b, 0);
+        if (sum !== 70) {
+          state.current.vysledek = { ...state.current.vysledek, ociHrace: [0, 0, 0, 70] };
+        }
       } else if (t === 'prvni') {
         // 1. povinnost: vydražitel = forhont, vždy.
         state.current.vydrazitel = state.current.forhont;
