@@ -30,18 +30,22 @@ Implementace vychází z pravidel **Vysočina** (turnaje GP Povodí Křetínky a
 - 4 hráči, rozmístění v mřížce 2×2 (proti směru hodinových ručiček: 1 4 / 2 3)
 - Ukazatel povinnosti, automatická rotace proti směru hodinových ručiček
 - Sehrávka jako 3-krokový průvodce (Dražba → Hlášky a fleky → Výsledek), Varšava ve 2 krocích
+- Vpravo nahoře v hlavičce wizardu zkrácený typ hry (PRVNÍ / DRUHÁ / …)
 - Typ hry: První, Druhá, Třetí (preferanc), Čtvrtá (sólo), Varšava
-- Vydražitel + partner / pozice talonu podle typu
-- Zavazující hlášky pagát/valát (vydražitel/obrana) + tiché varianty
+- Vydražitel se volí v Dražbě, partner až ve Výsledku (lze vyplňovat údaje průběžně během hry, kdy ještě partner není znám)
+- Zavazující hlášky pagát/valát se přiřazují **konkrétnímu hráči** (kdokoliv ze 4 hráčů); 2. povinnost má pagát automaticky uzamčený na vydražitele
+- Tichý pagát/valát (uhraný bez ohlášení) je samostatná volba ve Výsledku
 - Prozrazující hlášky per hráč: 8 hlášek ve dvou skupinách (počet taroků, trul/honéry) s exkluzivitou v rámci skupiny i mezi hráči (s výjimkou Trul + Královské honéry)
-- Fleky (flek / re / tutti) zvlášť pro hru, pagát a valát
-- Slidery pro oči (rozdělení 70 mezi týmy) a shoz protistrany při valátu
+- Fleky (flek / re / tutti) zvlášť pro hru, pagát a valát; pagát/valát fleky aktivní jen pokud je hláška přiřazena
+- Slidery pro oči (rozdělení 70 mezi týmy) a shoz protistrany při valátu (max podle typu hry)
 - Varšava: 4 propojené slidery, součet vždy 70
-- Vyúčtování: per-hráč rozpis transakcí + součet týmu, delta pillíře pro každého hráče
-- Celkové skóre + historie sehrávek (mřížka delt 2×2 mirrorující rozesazení)
-- Volba měny: **koruny** (např. 1,50 Kč) nebo **body** (5 hal = 1 bod)
-- localStorage persistence, reset hry zachová jména hráčů
-- Herní strop 20 Kč, sazby dle Vysočiny
+- Vyúčtování: per-hráč rozpis transakcí + součet týmu (násobitel × N pro asymetrické rozdělení), delta pillíře pro každého hráče
+- Celkové skóre + historie sehrávek (mřížka delt 2×2 mirrorující rozesazení), položky historie zobrazují plný název hry + forhont · vydražitel
+- Volba **body** (5 hal = 1 bod) nebo **koruny** (např. 1,50 Kč); volba se vybírá v setupu, výchozí *body*
+- Barevné rozlišení rolí ve jménech hráčů: forhont (žlutá), vydražitel (růžová), oba současně (gradient) — průchozí ve všech sekcích aplikace
+- iOS-style modální dialogy pro destruktivní akce (reset hry, zrušení sehrávky)
+- localStorage persistence, reset hry zachová jména hráčů a zvolený režim měny
+- Herní strop 20 Kč (400 b), sazby dle Vysočiny, bez zaokrouhlování
 
 ## Struktura
 
