@@ -234,13 +234,19 @@ input::placeholder { color: var(--muted-2); }
 .info-chip {
   display: inline-flex;
   align-items: center;
+  gap: 4px;
   padding: 8px 14px;
-  background: var(--panel-lo);
-  border: 1px dashed var(--border-hi);
+  background: var(--chip-bg);
+  border: none;
   border-radius: var(--radius-pill);
   color: var(--muted);
-  font-size: 0.9rem;
+  font-size: 15px;
   min-height: 38px;
+  white-space: pre;
+}
+.forhont-name {
+  color: var(--accent);
+  font-weight: 600;
 }
 
 /* ---------- Panel / Field (iOS grouped) ---------- */

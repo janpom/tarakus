@@ -72,6 +72,8 @@ function stepDrazba(state, actions) {
   const isVarsava = d.type === 'varsava';
 
   return h('div', { class: 'panel' },
+    field('Forhont', infoChip(forhontName(state))),
+
     field('Typ hry (povinnost)',
       h('div', { class: 'chips wrap-2 type-chips' },
         ...Object.entries(GAME_INFO).map(([k, info]) => h('button', {
@@ -84,10 +86,6 @@ function stepDrazba(state, actions) {
         )),
       ),
     ),
-
-    isVarsava
-      ? field('Forhont', infoChip(`${players[d.forhont]} vyhlašuje Varšavu`))
-      : null,
 
     d.type && !isVarsava ? vydrazitelField(state, actions) : null,
 
@@ -466,8 +464,12 @@ function hlChip(cur, val, label, onclick) {
   }, label);
 }
 
-function infoChip(text) {
-  return h('div', { class: 'info-chip' }, text);
+function infoChip(...children) {
+  return h('div', { class: 'info-chip' }, ...children);
+}
+
+function forhontName(state) {
+  return h('span', { class: 'forhont-name' }, state.players[state.current.forhont]);
 }
 
 // ===== validace =====
