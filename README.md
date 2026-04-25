@@ -23,7 +23,7 @@ Soubor `.nojekyll` zakazuje Jekyll zpracování (potřeba pro adresáře začín
 
 ## Pravidla
 
-Implementace vychází z pravidel **Vysočina** (turnaje GP Povodí Křetínky a Svitavy). Viz *Obecná pravidla* a *Placení* v sekci [taroky.net/pravitar.html](https://taroky.net/pravitar.html).
+Implementace vychází z pravidel **Vysočina** (turnaje GP Povodí Křetínky a Svitavy). Viz *Obecná pravidla* a *Placení* v sekci [taroky.net/pravitar.html](http://taroky.net/pravitar.html).
 
 ### Co aplikace umí
 
