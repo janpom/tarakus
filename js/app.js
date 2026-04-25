@@ -41,8 +41,10 @@ const actions = {
 
   resetGame() {
     if (!confirm('Opravdu začít novou hru? Aktuální skóre bude smazáno.')) return;
+    const prev = state.players;
     reset();
     state = load();
+    state.previousPlayers = prev;
     render();
   },
 

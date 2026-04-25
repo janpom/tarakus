@@ -21,7 +21,7 @@ export function viewSetup(state, actions) {
           placeholder: `Hráč ${i + 1}`,
           required: true,
           autocomplete: 'off',
-          value: state.players?.[i] ?? '',
+          value: state.players?.[i] ?? state.previousPlayers?.[i] ?? '',
         });
         inputs.push(input);
         return h('div', { class: `player-slot slot-${i}` }, input);
