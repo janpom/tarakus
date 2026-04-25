@@ -3,18 +3,73 @@ import {
   GAME_LABELS, MALE_HLASKY, VELKE_HLASKY, FLEK_LABELS, TRETI_POZICE,
 } from '../constants.js';
 
+const STEPS_NORMAL = [
+  { id: 'drazba', title: 'Dražba' },
+  { id: 'hlasky', title: 'Hlášky a fleky' },
+  { id: 'vysledek', title: 'Výsledek' },
+];
+const STEPS_VARSAVA = [
+  { id: 'drazba', title: 'Varšava' },
+  { id: 'vysledek', title: 'Výsledek' },
+];
+
+function stepsFor(type) {
+  return type === 'varsava' ? STEPS_VARSAVA : STEPS_NORMAL;
+}
+
 export function viewSehravka(state, actions) {
   const d = state.current;
-  const isVarsava = d.type === 'varsava';
-  return h('div', { class: 'sehravka' },
-    h('header', { class: 'app-header' },
-      h('button', { class: 'ghost small', onclick: actions.cancelSehravka }, '✕'),
-      h('h1', {}, 'Nová sehrávka'),
-      h('span', { class: 'spacer' }),
+  const steps = stepsFor(d.type);
+  const stepIdx = Math.min(d.step ?? 0, steps.length - 1);
+  const step = steps[stepIdx];
+
+  let content;
+  if (step.id === 'drazba') content = stepDrazba(state, actions);
+  else if (step.id === 'hlasky') content = stepHlaskyFleky(state, actions);
+  else if (step.id === 'vysledek') content = stepVysledek(state, actions);
+
+  const err = validateStep(step.id, state);
+  const isLast = stepIdx === steps.length - 1;
+
+  return h('div', { class: 'wizard' },
+    h('header', { class: 'wizard-header' },
+      stepIdx > 0
+        ? h('button', { class: 'icon-btn', onclick: actions.prevStep, 'aria-label': 'Zpět' }, '←')
+        : h('button', { class: 'icon-btn', onclick: actions.cancelSehravka, 'aria-label': 'Zrušit' }, '✕'),
+      h('div', { class: 'wizard-title' },
+        h('h1', {}, step.title),
+        h('div', { class: 'step-dots' },
+          ...steps.map((s, i) => h('button', {
+            class: `dot ${i === stepIdx ? 'active' : i < stepIdx ? 'done' : ''}`,
+            type: 'button',
+            onclick: i < stepIdx ? () => actions.jumpToStep(i) : undefined,
+            'aria-label': s.title,
+          })),
+        ),
+      ),
+      h('span', { class: 'icon-btn invisible' }),
     ),
-    h('section', { class: 'step' },
-      h('h2', {}, 'Typ hry'),
-      h('div', { class: 'chips' },
+    h('main', { class: 'wizard-content' }, content),
+    h('footer', { class: 'wizard-footer' },
+      err ? h('div', { class: 'err-bar' }, err) : null,
+      h('button', {
+        class: 'primary big',
+        disabled: err ? true : null,
+        onclick: actions.nextStep,
+      }, isLast ? 'Vypočítat vyúčtování' : 'Pokračovat →'),
+    ),
+  );
+}
+
+// ===== Krok 1: Dražba =====
+function stepDrazba(state, actions) {
+  const d = state.current;
+  const players = state.players;
+  const isVarsava = d.type === 'varsava';
+
+  return h('div', { class: 'panel' },
+    field('Typ hry',
+      h('div', { class: 'chips wrap-2' },
         ...Object.entries(GAME_LABELS).map(([k, label]) => h('button', {
           class: `chip ${d.type === k ? 'active' : ''}`,
           type: 'button',
@@ -22,43 +77,30 @@ export function viewSehravka(state, actions) {
         }, label)),
       ),
     ),
-    d.type ? sectionVydrazitel(state, actions) : null,
-    d.type && !isVarsava ? sectionZavazujici(state, actions) : null,
-    d.type && !isVarsava ? sectionHlasky(state, actions) : null,
-    d.type && !isVarsava ? sectionFleky(state, actions) : null,
-    d.type && !isVarsava ? sectionVysledekNeVarsava(state, actions) : null,
-    d.type && isVarsava ? sectionVysledekVarsava(state, actions) : null,
-    d.type ? sectionSubmit(state, actions) : null,
+
+    isVarsava
+      ? field('Forhont', infoChip(`${players[d.forhont]} vyhlašuje Varšavu`))
+      : null,
+
+    d.type && !isVarsava ? vydrazitelField(state, actions) : null,
+
+    (d.type === 'prvni' || d.type === 'druha') ? partnerField(state, actions) : null,
+    d.type === 'treti' ? talonField(state, actions) : null,
+
+    d.type && !isVarsava ? zavazujiciField(state, actions) : null,
   );
 }
 
-function sectionVydrazitel(state, actions) {
+function vydrazitelField(state, actions) {
   const d = state.current;
   const players = state.players;
-
-  if (d.type === 'varsava') {
-    return h('section', { class: 'step' },
-      h('h2', {}, 'Forhont'),
-      h('div', { class: 'chips' },
-        h('button', { class: 'chip active', type: 'button', disabled: true }, players[d.forhont]),
-      ),
-    );
-  }
   if (d.type === 'prvni') {
-    return h('section', { class: 'step' },
-      h('h2', {}, 'Vydražitel'),
-      h('div', { class: 'chips' },
-        h('button', { class: 'chip active', type: 'button', disabled: true }, players[d.forhont]),
-      ),
-      partnerPicker(state, actions),
-    );
+    return field('Vydražitel', infoChip(`${players[d.forhont]} (povinně forhont)`));
   }
   const canPick = d.type === 'druha'
-    ? players.map((_, i) => i !== d.forhont ? i : null).filter(i => i != null)
+    ? players.map((_, i) => i).filter(i => i !== d.forhont)
     : players.map((_, i) => i);
-
-  return h('section', { class: 'step' },
-    h('h2', {}, 'Vydražitel'),
+  return field('Vydražitel',
     h('div', { class: 'chips' },
       ...canPick.map(i => h('button', {
         class: `chip ${d.vydrazitel === i ? 'active' : ''}`,
@@ -66,27 +108,13 @@ function sectionVydrazitel(state, actions) {
         onclick: () => actions.updateDraft({ vydrazitel: i }),
       }, players[i])),
     ),
-    d.type === 'druha' ? partnerPicker(state, actions) : null,
-    d.type === 'treti'
-      ? h('div', { class: 'subsection' },
-          h('h3', {}, 'Pozice talonu'),
-          h('div', { class: 'chips' },
-            ...Object.entries(TRETI_POZICE).map(([k, label]) => h('button', {
-              class: `chip ${d.tretiPozice === Number(k) ? 'active' : ''}`,
-              type: 'button',
-              onclick: () => actions.updateDraft({ tretiPozice: Number(k) }),
-            }, label)),
-          ),
-        )
-      : null,
   );
 }
 
-function partnerPicker(state, actions) {
+function partnerField(state, actions) {
   const d = state.current;
   const players = state.players;
-  return h('div', { class: 'subsection' },
-    h('h3', {}, 'Partner'),
+  return field('Partner (držitel volaného taroku)',
     h('div', { class: 'chips' },
       ...players.map((name, i) => h('button', {
         class: `chip ${d.partner === i ? 'active' : ''}`,
@@ -97,36 +125,21 @@ function partnerPicker(state, actions) {
   );
 }
 
-function sectionHlasky(state, actions) {
+function talonField(state, actions) {
   const d = state.current;
-  const players = state.players;
-  const allHlasky = { ...MALE_HLASKY, ...VELKE_HLASKY };
-  return h('section', { class: 'step' },
-    h('h2', {}, 'Prozrazující hlášky'),
-    ...players.map((name, i) => h('div', { class: 'hlasky-player' },
-      h('h3', {}, name),
-      h('div', { class: 'checkbox-grid' },
-        ...Object.entries(allHlasky).map(([key, def]) => {
-          const checked = !!(d.hlasky?.[i]?.[key]);
-          return h('label', { class: `check ${checked ? 'on' : ''}` },
-            h('input', {
-              type: 'checkbox',
-              checked: checked || null,
-              onchange: (e) => actions.toggleHlaska(i, key, e.target.checked),
-            }),
-            h('span', {}, def.label),
-          );
-        }),
-      ),
-    )),
+  return field('Pozice talonu',
+    h('div', { class: 'chips' },
+      ...Object.entries(TRETI_POZICE).map(([k, label]) => h('button', {
+        class: `chip ${d.tretiPozice === Number(k) ? 'active' : ''}`,
+        type: 'button',
+        onclick: () => actions.updateDraft({ tretiPozice: Number(k) }),
+      }, label)),
+    ),
   );
 }
 
-function sectionZavazujici(state, actions) {
+function zavazujiciField(state, actions) {
   const d = state.current;
-  const pagHl = d.vysledek?.pagat?.hlaseno ?? null;
-  const valHl = d.vysledek?.valat?.hlaseno ?? null;
-
   const setHl = (key) => (val) => {
     const cur = d.vysledek?.[key] ?? null;
     if (val === null) {
@@ -136,50 +149,88 @@ function sectionZavazujici(state, actions) {
       actions.updateVysledek({ [key]: { uhran: cur?.uhran ?? null, hlaseno: val } });
     }
   };
-
-  return h('section', { class: 'step' },
-    h('h2', {}, 'Zavazující hlášky'),
-    h('div', { class: 'flek-row' },
-      h('span', { class: 'flek-label' }, 'Pagát'),
-      h('div', { class: 'chips' },
-        hlChip(pagHl, null, '–', () => setHl('pagat')(null)),
-        hlChip(pagHl, 'vydr', 'vydr.', () => setHl('pagat')('vydr')),
-        hlChip(pagHl, 'prot', 'prot.', () => setHl('pagat')('prot')),
-      ),
-    ),
-    h('div', { class: 'flek-row' },
-      h('span', { class: 'flek-label' }, 'Valát'),
-      h('div', { class: 'chips' },
-        hlChip(valHl, null, '–', () => setHl('valat')(null)),
-        hlChip(valHl, 'vydr', 'vydr.', () => setHl('valat')('vydr')),
-        hlChip(valHl, 'prot', 'prot.', () => setHl('valat')('prot')),
-      ),
-    ),
-  );
-}
-
-function hlChip(cur, val, label, onclick) {
-  return h('button', {
-    class: `chip ${cur === val ? 'active' : ''}`,
-    type: 'button', onclick,
-  }, label);
-}
-
-function sectionFleky(state, actions) {
-  const d = state.current;
   const pagHl = d.vysledek?.pagat?.hlaseno ?? null;
   const valHl = d.vysledek?.valat?.hlaseno ?? null;
-  return h('section', { class: 'step' },
-    h('h2', {}, 'Flekování'),
-    flekRow('Hra', d.flekHry ?? 0, v => actions.updateDraft({ flekHry: v })),
-    pagHl ? flekRow('Pagát', d.flekPagat ?? 0, v => actions.updateDraft({ flekPagat: v })) : null,
-    valHl ? flekRow('Valát', d.flekValat ?? 0, v => actions.updateDraft({ flekValat: v })) : null,
+  return field('Zavazující hlášky',
+    h('div', { class: 'row-stack' },
+      h('div', { class: 'labeled-row' },
+        h('span', { class: 'row-label' }, 'Pagát'),
+        h('div', { class: 'chips' },
+          hlChip(pagHl, null, '—', () => setHl('pagat')(null)),
+          hlChip(pagHl, 'vydr', 'vydražitel', () => setHl('pagat')('vydr')),
+          hlChip(pagHl, 'prot', 'obrana', () => setHl('pagat')('prot')),
+        ),
+      ),
+      h('div', { class: 'labeled-row' },
+        h('span', { class: 'row-label' }, 'Valát'),
+        h('div', { class: 'chips' },
+          hlChip(valHl, null, '—', () => setHl('valat')(null)),
+          hlChip(valHl, 'vydr', 'vydražitel', () => setHl('valat')('vydr')),
+          hlChip(valHl, 'prot', 'obrana', () => setHl('valat')('prot')),
+        ),
+      ),
+    ),
   );
+}
+
+// ===== Krok 2: Hlášky + Fleky =====
+function stepHlaskyFleky(state, actions) {
+  const d = state.current;
+  const tabIdx = d.hlaskyTab ?? 0;
+  const pagHl = d.vysledek?.pagat?.hlaseno ?? null;
+  const valHl = d.vysledek?.valat?.hlaseno ?? null;
+
+  return h('div', { class: 'panel' },
+    // Prozrazující hlášky — tabs
+    field('Prozrazující hlášky',
+      h('div', { class: 'tabs' },
+        ...state.players.map((name, i) => h('button', {
+          class: `tab ${i === tabIdx ? 'active' : ''}`,
+          type: 'button',
+          onclick: () => actions.setHlaskyTab(i),
+        }, name)),
+      ),
+      hlaskyPanel(state, actions, tabIdx),
+    ),
+    // Fleky
+    field('Flekování',
+      h('div', { class: 'row-stack' },
+        flekRow('Hra', d.flekHry ?? 0, v => actions.updateDraft({ flekHry: v })),
+        pagHl ? flekRow('Pagát', d.flekPagat ?? 0, v => actions.updateDraft({ flekPagat: v })) : null,
+        valHl ? flekRow('Valát', d.flekValat ?? 0, v => actions.updateDraft({ flekValat: v })) : null,
+      ),
+    ),
+  );
+}
+
+function hlaskyPanel(state, actions, playerIdx) {
+  const d = state.current;
+  const h1 = d.hlasky?.[playerIdx] ?? {};
+  const all = { ...MALE_HLASKY, ...VELKE_HLASKY };
+  return h('div', { class: 'hlasky-grid' },
+    ...Object.entries(all).map(([key, def]) => {
+      const on = !!h1[key];
+      return h('button', {
+        class: `chip lbl ${on ? 'active' : ''}`,
+        type: 'button',
+        onclick: () => actions.toggleHlaska(playerIdx, key, !on),
+      },
+        h('span', { class: 'lbl-main' }, shortHlaska(def.label)),
+        h('span', { class: 'lbl-sub' }, `${def.value}h`),
+      );
+    }),
+  );
+}
+
+function shortHlaska(label) {
+  return label
+    .replace(/ \(.*\)$/, '')
+    .replace('Královské honéry', 'Král. honéry');
 }
 
 function flekRow(label, val, setVal) {
-  return h('div', { class: 'flek-row' },
-    h('span', { class: 'flek-label' }, label),
+  return h('div', { class: 'labeled-row' },
+    h('span', { class: 'row-label' }, label),
     h('div', { class: 'chips' },
       ...FLEK_LABELS.map((lbl, i) => h('button', {
         class: `chip ${val === i ? 'active' : ''}`,
@@ -190,28 +241,43 @@ function flekRow(label, val, setVal) {
   );
 }
 
-function sectionVysledekNeVarsava(state, actions) {
+// ===== Krok 3: Výsledek =====
+function stepVysledek(state, actions) {
+  const d = state.current;
+  if (d.type === 'varsava') return vysledekVarsava(state, actions);
+  return vysledekNormal(state, actions);
+}
+
+function vysledekNormal(state, actions) {
   const d = state.current;
   const ociT1 = d.vysledek?.ociT1 ?? 35;
-  return h('section', { class: 'step' },
-    h('h2', {}, 'Výsledek'),
-    ociSlider(ociT1, 70, ['Vydražitel', 'Obrana'], v => actions.updateVysledek({ ociT1: v })),
+  return h('div', { class: 'panel' },
+    field('Oči (součet 70)',
+      ociSlider(ociT1, 70, ['Vydražitel', 'Obrana'], v => actions.updateVysledek({ ociT1: v })),
+    ),
     pagatValatVysledek(state, actions),
   );
 }
 
 function ociSlider(value, total, labels, setVal) {
-  // Aby drag fungoval, slider se nerenderuje znovu při každém pohybu –
-  // oninput pouze přepisuje text readoutu, onchange commituje do state.
-  const left = h('span', { class: `oci-val ${value >= 36 ? 'win' : ''}` }, `${labels[0]}: ${value}`);
-  const right = h('span', { class: `oci-val ${(total - value) >= 36 ? 'win' : ''}` }, `${labels[1]}: ${total - value}`);
+  const left = h('div', { class: `oci-team ${value >= 36 ? 'win' : ''}` },
+    h('span', { class: 'oci-label' }, labels[0]),
+    h('span', { class: 'oci-num' }, value),
+  );
+  const right = h('div', { class: `oci-team ${(total - value) >= 36 ? 'win' : ''}` },
+    h('span', { class: 'oci-label' }, labels[1]),
+    h('span', { class: 'oci-num' }, total - value),
+  );
+  const leftNum = left.querySelector('.oci-num');
+  const rightNum = right.querySelector('.oci-num');
   const slider = h('input', {
     type: 'range', min: 0, max: total, step: 1, value,
+    class: 'slider',
   });
   slider.addEventListener('input', () => {
     const v = Number(slider.value);
-    left.textContent = `${labels[0]}: ${v}`;
-    right.textContent = `${labels[1]}: ${total - v}`;
+    leftNum.textContent = v;
+    rightNum.textContent = total - v;
     left.classList.toggle('win', v >= 36);
     right.classList.toggle('win', (total - v) >= 36);
   });
@@ -238,98 +304,123 @@ function pagatValatVysledek(state, actions) {
     }
   };
 
-  return h('div', {},
-    h('div', { class: 'flek-row' },
-      h('span', { class: 'flek-label' }, 'Pagát'),
-      h('div', { class: 'chips' },
-        hlChip(pagU, null, '–', () => setU('pagat', pagHl)(null)),
-        hlChip(pagU, true, 'uhrán', () => setU('pagat', pagHl)(true)),
-        pagHl ? hlChip(pagU, false, 'neuhrán', () => setU('pagat', pagHl)(false)) : null,
+  return field('Pagát a valát',
+    h('div', { class: 'row-stack' },
+      h('div', { class: 'labeled-row' },
+        h('span', { class: 'row-label' },
+          'Pagát', pagHl ? h('span', { class: 'row-meta' }, `· ${pagHl === 'vydr' ? 'vydr.' : 'obr.'}`) : null,
+        ),
+        h('div', { class: 'chips' },
+          hlChip(pagU, null, '—', () => setU('pagat', pagHl)(null)),
+          hlChip(pagU, true, 'uhrán', () => setU('pagat', pagHl)(true)),
+          pagHl ? hlChip(pagU, false, 'neuhrán', () => setU('pagat', pagHl)(false)) : null,
+        ),
       ),
-    ),
-    h('div', { class: 'flek-row' },
-      h('span', { class: 'flek-label' }, 'Valát'),
-      h('div', { class: 'chips' },
-        hlChip(valU, null, '–', () => setU('valat', valHl)(null)),
-        hlChip(valU, true, 'uhrán', () => setU('valat', valHl)(true)),
-        valHl ? hlChip(valU, false, 'neuhrán', () => setU('valat', valHl)(false)) : null,
+      h('div', { class: 'labeled-row' },
+        h('span', { class: 'row-label' },
+          'Valát', valHl ? h('span', { class: 'row-meta' }, `· ${valHl === 'vydr' ? 'vydr.' : 'obr.'}`) : null,
+        ),
+        h('div', { class: 'chips' },
+          hlChip(valU, null, '—', () => setU('valat', valHl)(null)),
+          hlChip(valU, true, 'uhrán', () => setU('valat', valHl)(true)),
+          valHl ? hlChip(valU, false, 'neuhrán', () => setU('valat', valHl)(false)) : null,
+        ),
       ),
-    ),
-    valU === true
-      ? h('div', { class: 'sub-opt' },
-          h('span', {}, 'Shoz protistrany:'),
-          h('input', {
-            type: 'number', min: 0, max: 35, step: 1,
-            value: d.vysledek.shozProtiValat ?? 0,
-            oninput: (e) => actions.updateVysledek({
-              shozProtiValat: Math.max(0, Math.min(35, Number(e.target.value) || 0)),
+      valU === true
+        ? h('div', { class: 'labeled-row' },
+            h('span', { class: 'row-label' }, 'Shoz protistrany'),
+            h('input', {
+              type: 'number', min: 0, max: 35, step: 1,
+              value: d.vysledek.shozProtiValat ?? 0,
+              oninput: (e) => actions.updateVysledek({
+                shozProtiValat: Math.max(0, Math.min(35, Number(e.target.value) || 0)),
+              }),
             }),
-          }),
-        )
-      : null,
+          )
+        : null,
+    ),
   );
 }
 
-function sectionVysledekVarsava(state, actions) {
+function vysledekVarsava(state, actions) {
   const d = state.current;
   const oci = d.vysledek?.ociHrace ?? [0, 0, 0, 0];
   const sum = oci.reduce((a, b) => a + b, 0);
-  return h('section', { class: 'step' },
-    h('h2', {}, 'Výsledek'),
-    ...state.players.map((name, i) => h('div', { class: 'oci-row' },
-      h('span', { class: 'oci-row-name' },
-        i === d.forhont ? `${name} (F)` : name,
-      ),
-      h('input', {
-        type: 'number', min: 0, max: 70, step: 1,
-        value: oci[i],
-        oninput: (e) => {
-          const v = Math.max(0, Math.min(70, Number(e.target.value) || 0));
-          const next = oci.slice();
-          next[i] = v;
-          actions.updateVysledek({ ociHrace: next });
+  return h('div', { class: 'panel' },
+    field('Oči hráčů (součet 70)',
+      h('div', { class: 'varsava-grid' },
+        ...state.players.map((name, i) => h('div', {
+          class: `varsava-row ${i === d.forhont ? 'forhont' : ''}`,
         },
-      }),
-    )),
-    h('div', { class: `sum ${sum === 70 ? 'ok' : 'err'}` }, `Σ ${sum}/70`),
+          h('span', { class: 'v-name' }, name, i === d.forhont ? h('span', { class: 'badge-inline' }, 'F') : null),
+          h('input', {
+            type: 'number', min: 0, max: 70, step: 1,
+            value: oci[i],
+            oninput: (e) => {
+              const v = Math.max(0, Math.min(70, Number(e.target.value) || 0));
+              const next = oci.slice();
+              next[i] = v;
+              actions.updateVysledek({ ociHrace: next });
+            },
+          }),
+        )),
+      ),
+      h('div', { class: `sum-indicator ${sum === 70 ? 'ok' : 'err'}` }, `Σ ${sum} / 70`),
+    ),
   );
 }
 
-function sectionSubmit(state, actions) {
-  const err = validateDraft(state);
-  return h('section', { class: 'step submit-step' },
-    err ? h('div', { class: 'err' }, err) : null,
-    h('button', {
-      class: 'primary big',
-      disabled: err ? true : null,
-      onclick: actions.computeSehravka,
-    }, 'Vypočítat'),
+// ===== helpers =====
+function field(label, ...children) {
+  return h('div', { class: 'field' },
+    h('div', { class: 'field-label' }, label),
+    ...children,
   );
 }
 
-export function validateDraft(state) {
+function hlChip(cur, val, label, onclick) {
+  return h('button', {
+    class: `chip ${cur === val ? 'active' : ''}`,
+    type: 'button', onclick,
+  }, label);
+}
+
+function infoChip(text) {
+  return h('div', { class: 'info-chip' }, text);
+}
+
+// ===== validace =====
+export function validateStep(stepId, state) {
   const d = state.current;
-  if (!d.type) return 'Vyber typ hry.';
-  if (d.type === 'varsava') {
-    const oci = d.vysledek?.ociHrace ?? [0, 0, 0, 0];
-    const sum = oci.reduce((a, b) => a + b, 0);
-    if (sum !== 70) return `Součet očí musí být 70 (${sum}).`;
+  if (stepId === 'drazba') {
+    if (!d.type) return 'Vyber typ hry.';
+    if (d.type === 'varsava') return null;
+    if (d.vydrazitel == null) return 'Vyber vydražitele.';
+    if ((d.type === 'prvni' || d.type === 'druha') && d.partner == null) return 'Vyber partnera.';
+    if (d.type === 'treti' && !d.tretiPozice) return 'Vyber pozici talonu.';
     return null;
   }
-  if (d.vydrazitel == null) return 'Vyber vydražitele.';
-  if ((d.type === 'prvni' || d.type === 'druha') && d.partner == null) {
-    return 'Vyber partnera.';
+  if (stepId === 'hlasky') return null;
+  if (stepId === 'vysledek') {
+    if (d.type === 'varsava') {
+      const sum = (d.vysledek?.ociHrace ?? []).reduce((a, b) => a + b, 0);
+      if (sum !== 70) return `Součet očí: ${sum}/70.`;
+      return null;
+    }
+    if (d.vysledek?.pagat?.hlaseno && d.vysledek.pagat.uhran == null) return 'Pagát: uhrán nebo neuhrán?';
+    if (d.vysledek?.valat?.hlaseno && d.vysledek.valat.uhran == null) return 'Valát: uhrán nebo neuhrán?';
+    if (d.vysledek?.valat?.uhran === true && d.vysledek?.shozProtiValat == null) return 'Zadej shoz při valátu.';
+    return null;
   }
-  if (d.type === 'treti' && !d.tretiPozice) return 'Vyber pozici talonu.';
-  if (d.vysledek?.ociT1 == null) return 'Zadej oči.';
-  if (d.vysledek?.pagat?.hlaseno && d.vysledek.pagat.uhran == null) {
-    return 'Pagát: uhrán/neuhrán.';
-  }
-  if (d.vysledek?.valat?.hlaseno && d.vysledek.valat.uhran == null) {
-    return 'Valát: uhrán/neuhrán.';
-  }
-  if (d.vysledek?.valat?.uhran === true && d.vysledek?.shozProtiValat == null) {
-    return 'Zadej shoz při valátu.';
+  return null;
+}
+
+// Kompatibilita s původním API (app.js může volat validateDraft)
+export function validateDraft(state) {
+  const steps = state.current.type === 'varsava' ? ['drazba', 'vysledek'] : ['drazba', 'hlasky', 'vysledek'];
+  for (const s of steps) {
+    const e = validateStep(s, state);
+    if (e) return e;
   }
   return null;
 }

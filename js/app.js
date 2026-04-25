@@ -56,7 +56,39 @@ const actions = {
       hlasky: {},
       flekHry: 0, flekPagat: 0, flekValat: 0,
       vysledek: { ociT1: 35, pagat: null, valat: null, shozProtiValat: 0, ociHrace: [0, 0, 0, 0] },
+      step: 0,
+      hlaskyTab: 0,
     };
+    render();
+  },
+
+  nextStep() {
+    const c = state.current;
+    const steps = c.type === 'varsava'
+      ? ['drazba', 'vysledek']
+      : ['drazba', 'hlasky', 'vysledek'];
+    const next = (c.step ?? 0) + 1;
+    if (next >= steps.length) {
+      actions.computeSehravka();
+      return;
+    }
+    c.step = next;
+    render();
+  },
+
+  prevStep() {
+    const c = state.current;
+    c.step = Math.max(0, (c.step ?? 0) - 1);
+    render();
+  },
+
+  jumpToStep(idx) {
+    state.current.step = Math.max(0, idx);
+    render();
+  },
+
+  setHlaskyTab(idx) {
+    state.current.hlaskyTab = idx;
     render();
   },
 
@@ -133,7 +165,10 @@ const actions = {
   },
 
   backToWizard() {
-    delete state.current.computed;
+    const c = state.current;
+    delete c.computed;
+    const steps = c.type === 'varsava' ? 2 : 3;
+    c.step = steps - 1;
     render();
   },
 
