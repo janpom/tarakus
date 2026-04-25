@@ -157,14 +157,17 @@ function zavazujiciField(state, actions) {
   };
   const pagHl = d.vysledek?.pagat?.hlaseno ?? null;
   const valHl = d.vysledek?.valat?.hlaseno ?? null;
+  const druha = d.type === 'druha';
   return field('Zavazující hlášky',
     h('div', { class: 'row-stack' },
       h('div', { class: 'labeled-row' },
         h('span', { class: 'row-label' }, 'Pagát'),
-        h('div', { class: 'chips' },
-          hlChip(pagHl, 'vydr', 'vydražitel', () => setHl('pagat')('vydr')),
-          hlChip(pagHl, 'prot', 'obrana', () => setHl('pagat')('prot')),
-        ),
+        druha
+          ? h('span', { class: 'row-info' }, 'vydražitel (povinně)')
+          : h('div', { class: 'chips' },
+              hlChip(pagHl, 'vydr', 'vydražitel', () => setHl('pagat')('vydr')),
+              hlChip(pagHl, 'prot', 'obrana', () => setHl('pagat')('prot')),
+            ),
       ),
       h('div', { class: 'labeled-row' },
         h('span', { class: 'row-label' }, 'Valát'),

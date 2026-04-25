@@ -306,6 +306,11 @@ input::placeholder { color: var(--muted-2); }
 }
 .labeled-row .chips { flex: 1; justify-content: flex-end; }
 .labeled-row input[type="number"] { margin-left: auto; }
+.labeled-row .row-info {
+  margin-left: auto;
+  color: var(--muted);
+  font-size: 15px;
+}
 
 /* ---------- Setup screen ---------- */
 .setup {

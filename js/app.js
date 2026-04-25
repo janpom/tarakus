@@ -161,6 +161,12 @@ const actions = {
         if (state.current.vydrazitel === state.current.forhont || state.current.vydrazitel == null) {
           state.current.vydrazitel = null;
         }
+        // Pagát vždy hlásí vydražitel (závazek 2. povinnosti).
+        const curPag = state.current.vysledek?.pagat ?? null;
+        state.current.vysledek = {
+          ...state.current.vysledek,
+          pagat: { uhran: curPag?.uhran ?? null, hlaseno: 'vydr' },
+        };
       } else if (state.current.vydrazitel == null) {
         state.current.vydrazitel = state.current.forhont;
       }
