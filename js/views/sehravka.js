@@ -93,8 +93,6 @@ function stepDrazba(state, actions) {
 
     (d.type === 'prvni' || d.type === 'druha') ? partnerField(state, actions) : null,
     d.type === 'treti' ? talonField(state, actions) : null,
-
-    d.type && !isVarsava ? zavazujiciField(state, actions) : null,
   );
 }
 
@@ -207,6 +205,8 @@ function stepHlaskyFleky(state, actions) {
       ),
       hlaskyPanel(state, actions, tabIdx),
     ),
+    // Zavazující hlášky
+    zavazujiciField(state, actions),
     // Fleky
     field('Flekování',
       h('div', { class: 'row-stack' },
