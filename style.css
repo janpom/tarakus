@@ -117,7 +117,7 @@ button.small {
   min-height: 32px;
 }
 
-button.icon-btn {
+.icon-btn {
   width: 40px;
   height: 40px;
   min-height: 40px;
@@ -130,14 +130,16 @@ button.icon-btn {
   place-items: center;
   flex-shrink: 0;
   line-height: 1;
+  font: inherit;
+  cursor: pointer;
 }
-button.icon-btn > .ico {
+.icon-btn > .ico {
   font-size: 1.5rem;
   line-height: 1;
   display: block;
 }
-button.icon-btn:hover:not(:disabled) { color: var(--text); background: var(--panel-hi); }
-button.icon-btn.invisible { visibility: hidden; }
+.icon-btn:hover:not(:disabled) { color: var(--text); background: var(--panel-hi); }
+.icon-btn.invisible { visibility: hidden; }
 
 /* ---------- Inputs ---------- */
 input[type="text"],
