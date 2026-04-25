@@ -6,8 +6,10 @@ export function viewMain(state, actions) {
   const povId = state.povinnostIdx;
   return h('div', { class: 'main-view' },
     h('header', { class: 'app-header' },
-      h('h1', {}, 'Tarakus'),
-      h('button', { class: 'ghost small', onclick: actions.resetGame }, '⟲'),
+      h('img', { src: './assets/logo.png', alt: 'Tarakus', class: 'header-logo' }),
+      h('button', { class: 'icon-btn', onclick: actions.resetGame, 'aria-label': 'Nová hra' },
+        h('span', { class: 'ico' }, '↻'),
+      ),
     ),
     h('section', { class: 'grid2x2 scoreboard' },
       ...[0, 1, 2, 3].map(i => h('div', {

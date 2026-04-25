@@ -9,7 +9,8 @@ export function viewSummary(state, actions) {
 
   return h('div', { class: 'summary wizard' },
     h('header', { class: 'wizard-header' },
-      h('button', { class: 'icon-btn', onclick: actions.backToWizard, 'aria-label': 'Upravit' }, '←'),
+      h('button', { class: 'icon-btn', onclick: actions.backToWizard, 'aria-label': 'Upravit' },
+        h('span', { class: 'ico' }, '←')),
       h('div', { class: 'wizard-title' },
         h('h1', {}, 'Vyúčtování'),
         h('div', { class: 'step-dots' }, h('span', { class: 'dot done' }), h('span', { class: 'dot active' })),

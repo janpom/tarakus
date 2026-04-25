@@ -11,7 +11,9 @@ export function viewSetup(state, actions) {
       actions.startGame(names);
     },
   },
-    h('h1', {}, 'Tarakus'),
+    h('div', { class: 'brand' },
+      h('img', { src: './assets/logo.png', alt: 'Tarakus', class: 'brand-logo' }),
+    ),
     h('div', { class: 'grid2x2 setup-grid' },
       ...[0, 1, 2, 3].map(i => {
         const input = h('input', {

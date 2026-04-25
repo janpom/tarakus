@@ -34,8 +34,10 @@ export function viewSehravka(state, actions) {
   return h('div', { class: 'wizard' },
     h('header', { class: 'wizard-header' },
       stepIdx > 0
-        ? h('button', { class: 'icon-btn', onclick: actions.prevStep, 'aria-label': 'Zpět' }, '←')
-        : h('button', { class: 'icon-btn', onclick: actions.cancelSehravka, 'aria-label': 'Zrušit' }, '✕'),
+        ? h('button', { class: 'icon-btn', onclick: actions.prevStep, 'aria-label': 'Zpět' },
+            h('span', { class: 'ico' }, '←'))
+        : h('button', { class: 'icon-btn', onclick: actions.cancelSehravka, 'aria-label': 'Zrušit' },
+            h('span', { class: 'ico' }, '✕')),
       h('div', { class: 'wizard-title' },
         h('h1', {}, step.title),
         h('div', { class: 'step-dots' },

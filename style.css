@@ -125,12 +125,16 @@ button.icon-btn {
   background: transparent;
   border: 1px solid transparent;
   border-radius: var(--radius-sm);
-  font-size: 1.2rem;
   color: var(--muted);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+  display: inline-grid;
+  place-items: center;
   flex-shrink: 0;
+  line-height: 1;
+}
+button.icon-btn > .ico {
+  font-size: 1.5rem;
+  line-height: 1;
+  display: block;
 }
 button.icon-btn:hover:not(:disabled) { color: var(--text); background: var(--panel-hi); }
 button.icon-btn.invisible { visibility: hidden; }
@@ -289,6 +293,27 @@ input:focus-visible {
   background-clip: text;
   -webkit-text-fill-color: transparent;
   letter-spacing: -0.02em;
+  margin: 0;
+}
+
+.brand {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 4px;
+}
+.brand-logo {
+  width: 220px;
+  height: 220px;
+  max-width: 56vw;
+  max-height: 56vw;
+  object-fit: contain;
+}
+
+.header-logo {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  flex-shrink: 0;
 }
 
 .setup-grid { margin: 8px 0; }
@@ -328,6 +353,7 @@ input:focus-visible {
   margin: 0;
 }
 .app-header .spacer { width: 40px; }
+.app-header .header-logo + .icon-btn { margin-left: auto; }
 
 .scoreboard { margin-bottom: 12px; }
 
