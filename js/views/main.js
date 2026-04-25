@@ -1,14 +1,26 @@
 import { h } from '../ui.js';
-import { formatHal } from '../state.js';
+import { formatHal, computeRole } from '../state.js';
 import { GAME_INFO } from '../constants.js';
+
+function pname(name, role) {
+  return h('span', { class: `pname ${role}` }, name);
+}
 
 function historyItem(s, num, players) {
   const prefix = num < 10 ? ' #' : '#';
+  const forhontEl = pname(players[s.forhont], computeRole(s.forhont, s.vydrazitel, s.forhont));
+  const vydrazEl = (s.vydrazitel != null && s.vydrazitel !== s.forhont)
+    ? pname(players[s.vydrazitel], computeRole(s.forhont, s.vydrazitel, s.vydrazitel))
+    : null;
   return h('li', { class: 'hist-item' },
     h('div', { class: 'hist-num' }, `${prefix}${num}`),
     h('div', { class: 'hist-meta' },
-      h('div', { class: 'hist-type' }, GAME_INFO[s.type]?.short ?? s.typeLabel),
-      h('div', { class: 'hist-forhont' }, players[s.forhont]),
+      h('div', { class: 'hist-type' }, s.typeLabel ?? GAME_INFO[s.type]?.full ?? GAME_INFO[s.type]?.short),
+      h('div', { class: 'hist-actors' },
+        forhontEl,
+        vydrazEl ? ' · ' : null,
+        vydrazEl,
+      ),
     ),
     h('div', { class: 'hist-grid grid2x2' },
       ...[0, 1, 2, 3].map(i => {
@@ -34,7 +46,9 @@ export function viewMain(state, actions) {
       ...[0, 1, 2, 3].map(i => h('div', {
         class: `player-card slot-${i} ${i === povId ? 'povinnost' : ''}`,
       },
-        h('div', { class: 'player-name' }, state.players[i]),
+        h('div', { class: 'player-name' },
+          pname(state.players[i], computeRole(povId, null, i)),
+        ),
         h('div', { class: 'player-total' }, formatHal(state.totals[i])),
       )),
     ),

@@ -56,6 +56,16 @@ export function setMode(mode) {
   currentMode = mode === 'body' ? 'body' : 'kc';
 }
 
+// Vrací CSS třídu role hráče: '' / 'role-forhont' / 'role-vydrazitel' / 'role-both'.
+export function computeRole(forhont, vydrazitel, playerId) {
+  const f = forhont === playerId;
+  const v = vydrazitel === playerId;
+  if (f && v) return 'role-both';
+  if (f) return 'role-forhont';
+  if (v) return 'role-vydrazitel';
+  return '';
+}
+
 export function formatHal(hal) {
   const sign = hal < 0 ? '−' : hal > 0 ? '+' : '';
   const abs = Math.abs(hal);

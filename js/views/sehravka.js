@@ -1,9 +1,16 @@
 import { h } from '../ui.js';
+import { computeRole } from '../state.js';
 import {
   GAME_INFO, MALE_HLASKY, VELKE_HLASKY, FLEK_LABELS, TRETI_POZICE, HLASKA_ORDER,
 } from '../constants.js';
 
 const HLASKA_DEFS = { ...MALE_HLASKY, ...VELKE_HLASKY };
+
+function pname(state, playerId) {
+  const d = state.current;
+  const role = computeRole(d?.forhont, d?.vydrazitel, playerId);
+  return h('span', { class: `pname ${role}` }, state.players[playerId]);
+}
 
 const STEPS_NORMAL = [
   { id: 'drazba', title: 'Dražba' },
@@ -33,6 +40,7 @@ export function viewSehravka(state, actions) {
   const err = validateStep(step.id, state);
   const isLast = stepIdx === steps.length - 1;
 
+  const typeShort = d.type ? GAME_INFO[d.type]?.short : '';
   return h('div', { class: 'wizard' },
     h('header', { class: 'wizard-header' },
       stepIdx > 0
@@ -51,7 +59,7 @@ export function viewSehravka(state, actions) {
           })),
         ),
       ),
-      h('span', { class: 'icon-btn invisible' }),
+      h('span', { class: 'wizard-type' }, typeShort),
     ),
     h('main', { class: 'wizard-content' }, content),
     h('footer', { class: 'wizard-footer' },
@@ -97,7 +105,7 @@ function vydrazitelField(state, actions) {
   const d = state.current;
   const players = state.players;
   if (d.type === 'prvni') {
-    return field('Vydražitel', infoChip(`${players[d.forhont]} (povinně forhont)`));
+    return field('Vydražitel', infoChip(pname(state, d.forhont), ' (povinně forhont)'));
   }
   const canPick = d.type === 'druha'
     ? players.map((_, i) => i).filter(i => i !== d.forhont)
@@ -105,10 +113,10 @@ function vydrazitelField(state, actions) {
   return field('Vydražitel',
     h('div', { class: 'chips' },
       ...canPick.map(i => h('button', {
-        class: `chip ${d.vydrazitel === i ? 'active' : ''}`,
+        class: `chip chip-player ${d.vydrazitel === i ? 'active' : ''}`,
         type: 'button',
         onclick: () => actions.updateDraft({ vydrazitel: i }),
-      }, players[i])),
+      }, pname(state, i))),
     ),
   );
 }
@@ -119,10 +127,10 @@ function partnerField(state, actions) {
   return field('Partner (držitel volaného taroku)',
     h('div', { class: 'chips' },
       ...players.map((name, i) => h('button', {
-        class: `chip ${d.partner === i ? 'active' : ''}`,
+        class: `chip chip-player ${d.partner === i ? 'active' : ''}`,
         type: 'button',
         onclick: () => actions.updateDraft({ partner: i }),
-      }, name)),
+      }, pname(state, i))),
     ),
   );
 }
@@ -158,7 +166,11 @@ function zavazujiciField(state, actions) {
   const valP = d.vysledek?.valat?.player ?? null;
   const druha = d.type === 'druha';
   const playerChips = (curId, onPick) => h('div', { class: 'chips' },
-    ...players.map((name, i) => hlChip(curId, i, name, () => onPick(i))),
+    ...players.map((name, i) => h('button', {
+      class: `chip chip-player ${curId === i ? 'active' : ''}`,
+      type: 'button',
+      onclick: () => onPick(i),
+    }, pname(state, i))),
   );
   return field('Zavazující hlášky',
     h('div', { class: 'row-stack' },
@@ -166,7 +178,9 @@ function zavazujiciField(state, actions) {
         h('span', { class: 'row-label' }, 'Pagát'),
         druha
           ? h('span', { class: 'row-info' },
-              d.vydrazitel != null ? `${players[d.vydrazitel]} (povinně)` : 'vydražitel (povinně)')
+              d.vydrazitel != null
+                ? h('span', {}, pname(state, d.vydrazitel), ' (povinně)')
+                : 'vydražitel (povinně)')
           : playerChips(pagP, setPlayer('pagat')),
       ),
       h('div', { class: 'labeled-row' },
@@ -196,7 +210,7 @@ function stepHlaskyFleky(state, actions) {
             type: 'button',
             onclick: () => actions.setHlaskyTab(i),
           },
-            h('span', { class: 'tab-name' }, name),
+            h('span', { class: 'tab-name' }, pname(state, i)),
             ...selected.map(k => h('span', { class: 'tab-hlaska' }, HLASKA_DEFS[k].short ?? HLASKA_DEFS[k].label)),
           );
         }),
@@ -327,14 +341,14 @@ function pagatValatVysledek(state, actions) {
   return field('Pagát a valát',
     h('div', { class: 'row-stack' },
       h('div', { class: 'labeled-row' },
-        pagatValatLabel('Pagát', pagP, players),
+        pagatValatLabel('Pagát', pagP, state),
         h('div', { class: 'chips' },
           hlChip(pagU, true, 'uhraný', () => togU('pagat', pagP, pagU)(true)),
           pagP != null ? hlChip(pagU, false, 'neuhraný', () => togU('pagat', pagP, pagU)(false)) : null,
         ),
       ),
       h('div', { class: 'labeled-row' },
-        pagatValatLabel('Valát', valP, players),
+        pagatValatLabel('Valát', valP, state),
         h('div', { class: 'chips' },
           hlChip(valU, true, 'uhraný', () => togU('valat', valP, valU)(true)),
           valP != null ? hlChip(valU, false, 'neuhraný', () => togU('valat', valP, valU)(false)) : null,
@@ -351,13 +365,13 @@ function pagatValatVysledek(state, actions) {
   );
 }
 
-function pagatValatLabel(name, player, players) {
+function pagatValatLabel(name, player, state) {
   if (player == null) {
     return h('span', { class: 'row-label' }, `Tichý ${name.toLowerCase()}`);
   }
   return h('span', { class: 'row-label stacked' },
     h('span', { class: 'rl-main' }, name),
-    h('span', { class: 'rl-sub' }, players[player]),
+    h('span', { class: 'rl-sub' }, pname(state, player)),
   );
 }
 
@@ -414,7 +428,7 @@ function varsavaSlider(state, actions, idx, name, oci) {
   });
   return h('div', { class: 'varsava-row' },
     h('div', { class: 'varsava-content' },
-      h('span', { class: 'v-name' }, name),
+      h('span', { class: 'v-name' }, pname(state, idx)),
       slider,
     ),
     num,
@@ -471,7 +485,7 @@ function infoChip(...children) {
 }
 
 function forhontName(state) {
-  return h('span', { class: 'forhont-name' }, state.players[state.current.forhont]);
+  return pname(state, state.current.forhont);
 }
 
 // ===== validace =====

@@ -19,6 +19,10 @@
   --neg: #ff453a;
   --accent: #ff9f0a;
   --yellow: #ffd60a;
+  /* Role colors – musí být dobře čitelné na šedém, modrém i tmavém pozadí. */
+  --role-forhont: #ffd166;
+  --role-vydrazitel: #ff80ab;
+  --role-both-grad: linear-gradient(95deg, var(--role-forhont) 0%, var(--role-vydrazitel) 100%);
   --radius: 14px;
   --radius-sm: 10px;
   --radius-pill: 999px;
@@ -203,6 +207,14 @@ input::placeholder { color: var(--muted-2); }
 .chip:active:not(:disabled):not(.active) { background: var(--chip-bg-hi); }
 .chip[disabled] { opacity: 1; cursor: default; }
 
+/* Chip pro výběr hráče: aktivní stav má jen modrý okraj, výplň zůstává
+   šedá – role colors v textu pak zůstávají čitelné. */
+.chip.chip-player.active {
+  background: var(--chip-bg);
+  color: var(--text);
+  box-shadow: inset 0 0 0 2px var(--primary);
+}
+
 .chip.lbl {
   flex-direction: column;
   padding: 6px 10px;
@@ -244,9 +256,16 @@ input::placeholder { color: var(--muted-2); }
   min-height: 38px;
   white-space: pre;
 }
-.forhont-name {
-  color: var(--accent);
-  font-weight: 600;
+/* Jméno hráče s rolí – funguje vnořeně i uvnitř filled chip/tlačítek. */
+.pname { font-weight: 600; }
+.pname.role-forhont { color: var(--role-forhont); }
+.pname.role-vydrazitel { color: var(--role-vydrazitel); }
+.pname.role-both {
+  background: var(--role-both-grad);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
 }
 
 /* ---------- Panel / Field (iOS grouped) ---------- */
@@ -514,6 +533,10 @@ input::placeholder { color: var(--muted-2); }
   font-size: 13px;
   color: var(--accent);
 }
+.hist-actors {
+  font-size: 13px;
+  color: var(--muted);
+}
 .hist-grid {
   display: grid;
   grid-template-columns: repeat(2, auto);
@@ -557,6 +580,17 @@ input::placeholder { color: var(--muted-2); }
   font-size: 17px;
   font-weight: 600;
   letter-spacing: -0.01em;
+}
+.wizard-type {
+  display: inline-grid;
+  place-items: center end;
+  min-width: 64px;
+  padding: 0 6px;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  font-weight: 600;
 }
 
 .step-dots {

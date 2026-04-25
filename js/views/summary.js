@@ -1,12 +1,20 @@
 import { h } from '../ui.js';
-import { formatHal } from '../state.js';
+import { formatHal, computeRole } from '../state.js';
 import { determineTeams } from '../scoring.js';
+import { GAME_INFO } from '../constants.js';
+
+function pname(state, playerId) {
+  const s = state.current;
+  return h('span', { class: `pname ${computeRole(s.forhont, s.vydrazitel, playerId)}` },
+    state.players[playerId]);
+}
 
 export function viewSummary(state, actions) {
   const s = state.current;
   const result = s.computed;
   const players = state.players;
 
+  const typeShort = s.type ? GAME_INFO[s.type]?.short : '';
   return h('div', { class: 'summary wizard' },
     h('header', { class: 'wizard-header' },
       h('button', { class: 'icon-btn', onclick: actions.backToWizard, 'aria-label': 'Upravit' },
@@ -15,15 +23,9 @@ export function viewSummary(state, actions) {
         h('h1', {}, 'Vyúčtování'),
         h('div', { class: 'step-dots' }, h('span', { class: 'dot done' }), h('span', { class: 'dot active' })),
       ),
-      h('span', { class: 'icon-btn invisible' }),
+      h('span', { class: 'wizard-type' }, typeShort),
     ),
     h('main', { class: 'wizard-content summary-content' },
-      h('section', { class: 'recap' },
-        h('h2', {}, s.typeLabel ?? 'Sehrávka'),
-        s.vydrazitel != null
-          ? h('p', {}, 'Vydražitel: ', h('strong', {}, players[s.vydrazitel]))
-          : h('p', {}, 'Forhont: ', h('strong', {}, players[s.forhont])),
-      ),
       deltasSection(state, result),
       breakdownSection(state, result),
     ),
@@ -41,7 +43,7 @@ function deltasSection(state, result) {
       ...players.map((name, i) => {
         const d = result.delta[i] ?? 0;
         return h('div', { class: `delta-pill ${d > 0 ? 'pos' : d < 0 ? 'neg' : ''}` },
-          h('div', { class: 'd-name' }, name),
+          h('div', { class: 'd-name' }, pname(state, i)),
           h('div', { class: 'd-val' }, formatHal(d)),
         );
       }),
@@ -57,7 +59,12 @@ function breakdownSection(state, result) {
 
   let groups;
   if (s.type === 'varsava') {
-    groups = ids.map(i => ({ title: players[i], members: [i], multiplier: 1 }));
+    groups = ids.map(i => ({
+      title: pname(state, i),
+      members: [i],
+      multiplier: 1,
+      suppressMembers: true,
+    }));
   } else {
     const [team1, team2] = determineTeams(s.type, ids, s.vydrazitel, s.partner);
     groups = [
@@ -75,12 +82,12 @@ function breakdownSection(state, result) {
   return h('section', { class: 'field' },
     h('div', { class: 'field-label' }, 'Rozpis'),
     h('div', { class: klass },
-      ...groups.map(g => breakdownGroup({ ...g, showMult }, rows, players, isVarsava)),
+      ...groups.map(g => breakdownGroup(state, { ...g, showMult }, rows, isVarsava)),
     ),
   );
 }
 
-function breakdownGroup(group, rows, players, isVarsava) {
+function breakdownGroup(state, group, rows, isVarsava) {
   const memberSet = new Set(group.members);
   const mult = group.multiplier ?? 1;
   const items = [];
@@ -95,7 +102,9 @@ function breakdownGroup(group, rows, players, isVarsava) {
     let label = r.label;
     if (isVarsava) {
       const other = sign > 0 ? r.losers : r.winners;
-      label = sign > 0 ? `${players[other[0]]} →` : `→ ${players[other[0]]}`;
+      label = sign > 0
+        ? h('span', {}, pname(state, other[0]), ' →')
+        : h('span', {}, '→ ', pname(state, other[0]));
     }
     items.push({ label, value });
   }
@@ -104,11 +113,11 @@ function breakdownGroup(group, rows, players, isVarsava) {
   return h('div', { class: `team-card ${total > 0 ? 'pos' : total < 0 ? 'neg' : ''}` },
     h('div', { class: 'team-title' },
       h('span', {}, group.title),
-      group.members.length > 1
-        ? h('span', { class: 'member-names' }, group.members.map(i => players[i]).join(' + '))
-        : (group.title !== players[group.members[0]]
-            ? h('span', { class: 'member-names' }, players[group.members[0]])
-            : null),
+      !group.suppressMembers
+        ? h('span', { class: 'member-names' },
+            ...interleaveNames(state, group.members),
+          )
+        : null,
     ),
     items.length === 0
       ? h('div', { class: 'row-label' }, '—')
@@ -125,4 +134,13 @@ function breakdownGroup(group, rows, players, isVarsava) {
       h('span', { class: 'player-total' }, formatHal(total)),
     ),
   );
+}
+
+function interleaveNames(state, members) {
+  const out = [];
+  members.forEach((id, i) => {
+    if (i > 0) out.push(' + ');
+    out.push(pname(state, id));
+  });
+  return out;
 }
