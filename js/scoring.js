@@ -13,6 +13,17 @@ function flekSuffix(flek) {
   return `, ${FLEK_LABELS[flek] ?? ''}`;
 }
 
+const TRETI_POZICE_LABEL = {
+  1: 'na prvních',
+  2: 'na druhých',
+  3: 'na třetích',
+};
+
+function talonSuffix(type, tretiPozice) {
+  if (type !== 'treti' || !tretiPozice) return '';
+  return `, ${TRETI_POZICE_LABEL[tretiPozice] ?? ''}`;
+}
+
 const KC = 100;
 
 
@@ -88,14 +99,14 @@ export function scoreSehravka(input, players) {
     gameWinners = valatTeam;
     gameLosers = valatOppo;
     const ociT1Eff = valatTeam === team1 ? 70 - shoz : shoz;
-    gameLabel = `Hra (${ociT1Eff}:${70 - ociT1Eff}${flekSuffix(flekHry)})`;
+    gameLabel = `Hra (${ociT1Eff}:${70 - ociT1Eff}${talonSuffix(type, tretiPozice)}${flekSuffix(flekHry)})`;
   } else if (valat?.uhran === false) {
     // Valát selhal → hru vyhrává protistrana valátu
     const diff = Math.abs(ociT1 - 35) || 1;
     hodnotaHry = Math.min(diff * s * mHry, HERNI_STROP_HAL);
     gameWinners = valatOppo;
     gameLosers = valatTeam;
-    gameLabel = `Hra (${ociT1}:${70 - ociT1}${flekSuffix(flekHry)})`;
+    gameLabel = `Hra (${ociT1}:${70 - ociT1}${talonSuffix(type, tretiPozice)}${flekSuffix(flekHry)})`;
   } else {
     const diff = Math.abs(ociT1 - 35);
     const effDiff = diff === 0 ? 1 : diff;
@@ -104,12 +115,12 @@ export function scoreSehravka(input, players) {
       // 35:35: bez fleku platí vydražitel, s flekem platí protistrana
       gameWinners = flekHry > 0 ? team1 : team2;
       gameLosers = flekHry > 0 ? team2 : team1;
-      gameLabel = `Hra (35:35${flekSuffix(flekHry)})`;
+      gameLabel = `Hra (35:35${talonSuffix(type, tretiPozice)}${flekSuffix(flekHry)})`;
     } else {
       const t1Vyhral = ociT1 >= 36;
       gameWinners = t1Vyhral ? team1 : team2;
       gameLosers = t1Vyhral ? team2 : team1;
-      gameLabel = `Hra (${ociT1}:${70 - ociT1}${flekSuffix(flekHry)})`;
+      gameLabel = `Hra (${ociT1}:${70 - ociT1}${talonSuffix(type, tretiPozice)}${flekSuffix(flekHry)})`;
     }
   }
 
