@@ -1,7 +1,9 @@
 import { h } from '../ui.js';
 import {
-  GAME_INFO, MALE_HLASKY, VELKE_HLASKY, FLEK_LABELS, TRETI_POZICE,
+  GAME_INFO, MALE_HLASKY, VELKE_HLASKY, FLEK_LABELS, TRETI_POZICE, HLASKA_ORDER,
 } from '../constants.js';
+
+const HLASKA_DEFS = { ...MALE_HLASKY, ...VELKE_HLASKY };
 
 const STEPS_NORMAL = [
   { id: 'drazba', title: 'Dražba' },
@@ -190,11 +192,18 @@ function stepHlaskyFleky(state, actions) {
     // Prozrazující hlášky — tabs
     field('Prozrazující hlášky',
       h('div', { class: 'tabs' },
-        ...state.players.map((name, i) => h('button', {
-          class: `tab ${i === tabIdx ? 'active' : ''}`,
-          type: 'button',
-          onclick: () => actions.setHlaskyTab(i),
-        }, name)),
+        ...state.players.map((name, i) => {
+          const playerHlasky = d.hlasky?.[i] ?? {};
+          const selected = HLASKA_ORDER.filter(k => playerHlasky[k]);
+          return h('button', {
+            class: `tab ${i === tabIdx ? 'active' : ''}`,
+            type: 'button',
+            onclick: () => actions.setHlaskyTab(i),
+          },
+            h('span', { class: 'tab-name' }, name),
+            ...selected.map(k => h('span', { class: 'tab-hlaska' }, HLASKA_DEFS[k].short ?? HLASKA_DEFS[k].label)),
+          );
+        }),
       ),
       hlaskyPanel(state, actions, tabIdx),
     ),
@@ -212,26 +221,20 @@ function stepHlaskyFleky(state, actions) {
 function hlaskyPanel(state, actions, playerIdx) {
   const d = state.current;
   const h1 = d.hlasky?.[playerIdx] ?? {};
-  const all = { ...MALE_HLASKY, ...VELKE_HLASKY };
   return h('div', { class: 'hlasky-grid' },
-    ...Object.entries(all).map(([key, def]) => {
+    ...HLASKA_ORDER.map(key => {
+      const def = HLASKA_DEFS[key];
       const on = !!h1[key];
       return h('button', {
         class: `chip lbl ${on ? 'active' : ''}`,
         type: 'button',
         onclick: () => actions.toggleHlaska(playerIdx, key, !on),
       },
-        h('span', { class: 'lbl-main' }, shortHlaska(def.label)),
-        h('span', { class: 'lbl-sub' }, `${def.value}h`),
+        h('span', { class: 'lbl-main' }, def.short ?? def.label),
+        def.count ? h('span', { class: 'lbl-sub' }, `${def.count} t.`) : null,
       );
     }),
   );
-}
-
-function shortHlaska(label) {
-  return label
-    .replace(/ \(.*\)$/, '')
-    .replace('Královské honéry', 'Král. honéry');
 }
 
 function flekRow(label, val, setVal) {

@@ -33,20 +33,28 @@ export const RATE_HAL = {
   ctvrta: 40,
 };
 
-// Hlášky – prozrazující (v haléřích)
+// Hlášky – prozrazující (v haléřích).
+// `count` = počet taroků, jen u skupin podle počtu (taroky/taročky/barvičky/barvy).
+// `short` = krátký popisek pro chip (jinak `label`).
 export const MALE_HLASKY = {
-  trul: { label: 'Trul', value: 20 },
-  honery: { label: 'Honéry', value: 20 },
-  tarocky: { label: 'Taročky (8–9)', value: 20 },
-  barvicky: { label: 'Barvičky (0–2 taroky)', value: 20 },
+  trul:     { label: 'Trul',     value: 20 },
+  honery:   { label: 'Honéry',   value: 20 },
+  tarocky:  { label: 'Taročky',  value: 20, count: '8–9' },
+  barvicky: { label: 'Barvičky', value: 20, count: '1–2' },
 };
 
 export const VELKE_HLASKY = {
-  taroky: { label: 'Taroky (10+)', value: 40 },
-  kralovske_honery: { label: 'Královské honéry', value: 40 },
-  trul_honery: { label: 'Trul honéry', value: 40 },
-  barvy: { label: 'Barvy (bez taroku)', value: 40 },
+  taroky:           { label: 'Taroky',           value: 40, count: '10+' },
+  kralovske_honery: { label: 'Královské honéry', value: 40, short: 'Král. honéry' },
+  trul_honery:      { label: 'Trul honéry',      value: 40 },
+  barvy:            { label: 'Barvy',            value: 40, count: '0' },
 };
+
+// Pořadí pro zobrazení v UI – 1. řádek podle počtu, 2. řádek podle trulu/honér.
+export const HLASKA_ORDER = [
+  'taroky', 'tarocky', 'barvy', 'barvicky',
+  'honery', 'kralovske_honery', 'trul', 'trul_honery',
+];
 
 // Hlášky – zavazující (v Kč)
 // Pagát hlášený 2 Kč / tichý 1 Kč
@@ -64,10 +72,20 @@ export const FLEK_LABELS = ['bez fleku', 'flek', 're', 'tutti'];
 // Herní strop 20 Kč = 2000 haléřů
 export const HERNI_STROP_HAL = 2000;
 
-// Exklusivní skupiny hlášek – v každé skupině lze zaškrtnout max 1 hlášku.
+// Exklusivní skupiny hlášek – v každé skupině lze u jednoho hráče zaškrtnout max 1.
 export const HLASKA_GROUPS = {
   count: ['barvicky', 'tarocky', 'taroky', 'barvy'], // počet taroků
   trul: ['trul', 'honery', 'kralovske_honery', 'trul_honery'], // trul/honéry
+};
+
+// Cross-player kompatibilita uvnitř trul-skupiny.
+// Pokud hráč X aktivuje hlášku K, ostatní hráči si mohou ponechat jen ty hlášky,
+// které jsou ve TRUL_COMPAT[K]. Cokoli jiného z trul-skupiny se vyčistí.
+export const TRUL_COMPAT = {
+  trul: ['kralovske_honery'],
+  kralovske_honery: ['trul'],
+  honery: [],
+  trul_honery: [],
 };
 
 // Pozice talonu pro preferanc

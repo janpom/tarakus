@@ -1,5 +1,5 @@
 import { load, save, reset, nextPovinnost } from './state.js';
-import { GAME_LABELS, HLASKA_GROUPS } from './constants.js';
+import { GAME_LABELS, HLASKA_GROUPS, TRUL_COMPAT } from './constants.js';
 import { scoreSehravka } from './scoring.js';
 import { mount } from './ui.js';
 import { viewSetup } from './views/setup.js';
@@ -127,11 +127,23 @@ const actions = {
     const h = state.current.hlasky ?? {};
     h[playerId] = h[playerId] ?? {};
     h[playerId][key] = on;
-    // Skupinová exkluzivita – pokud zapínám, vypni ostatní hlášky ze stejné skupiny.
     if (on) {
-      for (const group of Object.values(HLASKA_GROUPS)) {
-        if (group.includes(key)) {
-          for (const other of group) if (other !== key) h[playerId][other] = false;
+      for (const [groupName, group] of Object.entries(HLASKA_GROUPS)) {
+        if (!group.includes(key)) continue;
+        // Per-hráč: max 1 hláška ze skupiny.
+        for (const other of group) if (other !== key) h[playerId][other] = false;
+        // Cross-player exkluzivita pro trul-skupinu, s výjimkou kompatibilních párů
+        // (např. Trul + Královské honéry mohou být současně).
+        if (groupName === 'trul') {
+          const allowed = new Set(TRUL_COMPAT[key] ?? []);
+          for (const otherPid of Object.keys(h)) {
+            if (Number(otherPid) === playerId) continue;
+            for (const k of group) {
+              if (h[otherPid] && h[otherPid][k] && !allowed.has(k)) {
+                h[otherPid][k] = false;
+              }
+            }
+          }
         }
       }
     }
