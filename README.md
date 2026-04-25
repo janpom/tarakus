@@ -2,6 +2,8 @@
 
 Aplikace pro počítání skóre ve hře **taroky** (varianta Vysočina). Jedna HTML stránka, vanilla JavaScript (ES moduly), žádný build, žádný backend. Data v `localStorage`.
 
+🌐 **Online**: <https://janpom.github.io/tarakus/>
+
 ## Spuštění lokálně
 
 Otevři `index.html` v prohlížeči. Pro správnou funkci ES modulů přes `file://` některé prohlížeče vyžadují HTTP server:
@@ -15,7 +17,7 @@ python3 -m http.server 8000
 
 1. Push do repa na GitHubu
 2. Settings → Pages → Source: *Deploy from branch* → `main` / `/ (root)`
-3. Stránka bude k dispozici na `https://<uzivatel>.github.io/<repo>/`
+3. Stránka je dostupná na `https://<uzivatel>.github.io/<repo>/`
 
 Soubor `.nojekyll` zakazuje Jekyll zpracování (potřeba pro adresáře začínající `_`).
 
@@ -25,39 +27,37 @@ Implementace vychází z pravidel **Vysočina** (turnaje GP Povodí Křetínky a
 
 ### Co aplikace umí
 
-- 4 hráči, rozmístění v mřížce 2×2
-- Ukazatel povinnosti, rotace proti směru hodinových ručiček
-- Sehrávka: 1./2./3./4. povinnost + Varšava
-- Vydražitel, volaný tarok, partner (pro 1./2.)
-- Pozice talonu (preferanc)
-- Zavazující hlášky (pagát, valát) + tiché
-- Prozrazující hlášky (trul, honéry, taročky, barvičky, barvy, taroky, trul honéry, královské honéry) – per hráč
-- Fleky (bez fleku / flek / re / tutti) zvlášť pro hru, pagát, valát
-- Výsledek: oči týmu (součet = 70), uhrán/neuhrán pagát/valát, pro valát hodnota shozu
-- Varšava: 4× oči (součet = 70), pravidlo *forhont platí více*
-- Vyúčtování: rozdíl očí × sazba (zaokrouhleno nahoru na 10 hal.), plus hlášky, plus pagát/valát, krát flek
-- Herní strop 20 Kč
-- Celkové skóre + historie sehrávek
-
-### Co aplikace NEumí (záměrně zjednodušeno)
-
-- Vlastní licitaci – zadáváš výsledek dražby ručně (vydražitel, typ, volaný tarok)
-- Hodnotu shozu při valátu – musíš zadat ručně (bodová hodnota karet, které protistrana nedostala do zdvihů)
+- 4 hráči, rozmístění v mřížce 2×2 (proti směru hodinových ručiček: 1 4 / 2 3)
+- Ukazatel povinnosti, automatická rotace proti směru hodinových ručiček
+- Sehrávka jako 3-krokový průvodce (Dražba → Hlášky a fleky → Výsledek), Varšava ve 2 krocích
+- Typ hry: První, Druhá, Třetí (preferanc), Čtvrtá (sólo), Varšava
+- Vydražitel + partner / pozice talonu podle typu
+- Zavazující hlášky pagát/valát (vydražitel/obrana) + tiché varianty
+- Prozrazující hlášky per hráč: 8 hlášek ve dvou skupinách (počet taroků, trul/honéry) s exkluzivitou v rámci skupiny i mezi hráči (s výjimkou Trul + Královské honéry)
+- Fleky (flek / re / tutti) zvlášť pro hru, pagát a valát
+- Slidery pro oči (rozdělení 70 mezi týmy) a shoz protistrany při valátu
+- Varšava: 4 propojené slidery, součet vždy 70
+- Vyúčtování: per-hráč rozpis transakcí + součet týmu, delta pillíře pro každého hráče
+- Celkové skóre + historie sehrávek (mřížka delt 2×2 mirrorující rozesazení)
+- localStorage persistence, reset hry zachová jména hráčů
+- Herní strop 20 Kč, zaokrouhlení na 10 hal., všechny sazby dle Vysočiny
 
 ## Struktura
 
 ```
 index.html          // single-page app
 style.css           // mobile-first styling
+assets/logo.png     // logo (favicon, setup, dashboard)
 js/
   app.js            // entry, router, akce
-  constants.js      // pravidla (sazby, hodnoty hlášek)
+  constants.js      // pravidla (sazby, hodnoty, skupiny hlášek)
   scoring.js        // pure výpočet delty sehrávky
   state.js          // state + localStorage + helpers
   ui.js             // DOM helpers (h, mount)
   views/
     setup.js        // zadání jmen
     main.js         // dashboard se skóre + historie
-    sehravka.js     // formulář nové sehrávky
+    sehravka.js     // 3-krokový wizard
     summary.js      // vyúčtování
+  scoring.test.mjs  // smoke testy (node js/scoring.test.mjs)
 ```
