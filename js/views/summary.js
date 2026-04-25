@@ -67,15 +67,16 @@ function breakdownSection(state, result) {
   }
 
   const klass = groups.length === 4 ? 'teams teams-4' : 'teams teams-2';
+  const isVarsava = s.type === 'varsava';
   return h('section', { class: 'field' },
     h('div', { class: 'field-label' }, 'Rozpis'),
     h('div', { class: klass },
-      ...groups.map(g => breakdownGroup(g, rows, players)),
+      ...groups.map(g => breakdownGroup(g, rows, players, isVarsava)),
     ),
   );
 }
 
-function breakdownGroup(group, rows, players) {
+function breakdownGroup(group, rows, players, isVarsava) {
   const memberSet = new Set(group.members);
   const mult = group.multiplier ?? 1;
   const items = [];
@@ -87,7 +88,12 @@ function breakdownGroup(group, rows, players) {
     if (sign === 0) continue;
     const value = sign * (r.value ?? 0);
     rowSum += value;
-    items.push({ label: r.label, value });
+    let label = r.label;
+    if (isVarsava) {
+      const other = sign > 0 ? r.losers : r.winners;
+      label = sign > 0 ? `${players[other[0]]} →` : `→ ${players[other[0]]}`;
+    }
+    items.push({ label, value });
   }
   const total = rowSum * mult;
   const sumLabel = mult > 1 ? `Součet × ${mult}` : 'Součet';
@@ -96,7 +102,9 @@ function breakdownGroup(group, rows, players) {
       h('span', {}, group.title),
       group.members.length > 1
         ? h('span', { class: 'member-names' }, group.members.map(i => players[i]).join(' + '))
-        : h('span', { class: 'member-names' }, players[group.members[0]]),
+        : (group.title !== players[group.members[0]]
+            ? h('span', { class: 'member-names' }, players[group.members[0]])
+            : null),
     ),
     items.length === 0
       ? h('div', { class: 'row-label' }, '—')
