@@ -52,7 +52,7 @@ export const VELKE_HLASKY = {
 
 // Pořadí pro zobrazení v UI – 1. řádek podle počtu, 2. řádek podle trulu/honér.
 export const HLASKA_ORDER = [
-  'taroky', 'tarocky', 'barvy', 'barvicky',
+  'taroky', 'tarocky', 'barvicky', 'barvy',
   'honery', 'kralovske_honery', 'trul', 'trul_honery',
 ];
 
