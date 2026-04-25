@@ -57,12 +57,12 @@ function breakdownSection(state, result) {
 
   let groups;
   if (s.type === 'varsava') {
-    groups = ids.map(i => ({ title: players[i], members: [i] }));
+    groups = ids.map(i => ({ title: players[i], members: [i], multiplier: 1 }));
   } else {
     const [team1, team2] = determineTeams(s.type, ids, s.vydrazitel, s.partner);
     groups = [
-      { title: team1.length === 1 ? 'Vydražitel' : 'Vydražitelský tým', members: team1 },
-      { title: team2.length === 1 ? 'Obrana' : 'Obrana', members: team2 },
+      { title: team1.length === 1 ? 'Vydražitel' : 'Vydražitelský tým', members: team1, multiplier: team2.length },
+      { title: team2.length === 1 ? 'Obrana' : 'Obrana', members: team2, multiplier: team1.length },
     ];
   }
 
@@ -77,20 +77,20 @@ function breakdownSection(state, result) {
 
 function breakdownGroup(group, rows, players) {
   const memberSet = new Set(group.members);
+  const mult = group.multiplier ?? 1;
   const items = [];
-  let total = 0;
+  let rowSum = 0;
   for (const r of rows) {
     const sign = r.winners?.some(i => memberSet.has(i))
       ? +1
       : r.losers?.some(i => memberSet.has(i)) ? -1 : 0;
     if (sign === 0) continue;
-    const side = sign > 0 ? r.winners : r.losers;
-    const other = sign > 0 ? r.losers : r.winners;
-    const inGroup = side.filter(i => memberSet.has(i)).length;
-    const delta = sign * inGroup * (other?.length ?? 0) * (r.value ?? 0);
-    total += delta;
-    items.push({ label: r.label, value: delta });
+    const value = sign * (r.value ?? 0);
+    rowSum += value;
+    items.push({ label: r.label, value });
   }
+  const total = rowSum * mult;
+  const sumLabel = mult > 1 ? `Součet × ${mult}` : 'Součet';
   return h('div', { class: `team-card ${total > 0 ? 'pos' : total < 0 ? 'neg' : ''}` },
     h('div', { class: 'team-title' },
       h('span', {}, group.title),
@@ -109,7 +109,7 @@ function breakdownGroup(group, rows, players) {
           )),
         ),
     h('div', { class: 'team-sum' },
-      h('span', {}, 'Součet'),
+      h('span', {}, sumLabel),
       h('span', { class: 'player-total' }, formatHal(total)),
     ),
   );

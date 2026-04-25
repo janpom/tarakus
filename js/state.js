@@ -54,6 +54,5 @@ export function formatHal(hal) {
   const abs = Math.abs(hal);
   const kc = Math.floor(abs / 100);
   const h = abs % 100;
-  if (h === 0) return `${sign}${kc} Kč`;
   return `${sign}${kc},${String(h).padStart(2, '0')} Kč`;
 }

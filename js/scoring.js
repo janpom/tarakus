@@ -3,10 +3,15 @@
 // Kladné delta = hráč dostává, záporné = hráč platí.
 
 import {
-  RATE_HAL, FLEK_MULT, MALE_HLASKY, VELKE_HLASKY,
+  RATE_HAL, FLEK_MULT, FLEK_LABELS, MALE_HLASKY, VELKE_HLASKY,
   PAGAT_HLASENY_KC, PAGAT_TICHY_KC, VALAT_HLASENY_KC, VALAT_TICHY_KC,
   HERNI_STROP_HAL,
 } from './constants.js';
+
+function flekSuffix(flek) {
+  if (!flek) return '';
+  return `, ${FLEK_LABELS[flek] ?? ''}`;
+}
 
 const KC = 100;
 
@@ -81,14 +86,14 @@ export function scoreSehravka(input, players) {
     hodnotaHry = Math.min(roundUp10(diff * s * mHry), HERNI_STROP_HAL);
     gameWinners = valatTeam;
     gameLosers = valatOppo;
-    gameLabel = `Hra (valát uhrán, ${Math.round(hodnotaHry) / 100} Kč)`;
+    gameLabel = `Hra (valát uhrán${flekSuffix(flekHry)})`;
   } else if (valat?.uhran === false) {
     // Valát selhal → hru vyhrává protistrana valátu
     const diff = Math.abs(ociT1 - 35) || 1;
     hodnotaHry = Math.min(roundUp10(diff * s * mHry), HERNI_STROP_HAL);
     gameWinners = valatOppo;
     gameLosers = valatTeam;
-    gameLabel = `Hra (valát selhal)`;
+    gameLabel = `Hra (valát selhal${flekSuffix(flekHry)})`;
   } else {
     const diff = Math.abs(ociT1 - 35);
     const effDiff = diff === 0 ? 1 : diff;
@@ -97,12 +102,12 @@ export function scoreSehravka(input, players) {
       // 35:35: bez fleku platí vydražitel, s flekem platí protistrana
       gameWinners = flekHry > 0 ? team1 : team2;
       gameLosers = flekHry > 0 ? team2 : team1;
-      gameLabel = `Hra (35:35, platí ${flekHry > 0 ? 'protistrana' : 'vydražitel'})`;
+      gameLabel = `Hra (35:35${flekSuffix(flekHry)})`;
     } else {
       const t1Vyhral = ociT1 >= 36;
       gameWinners = t1Vyhral ? team1 : team2;
       gameLosers = t1Vyhral ? team2 : team1;
-      gameLabel = `Hra (${ociT1}:${70 - ociT1}, ${t1Vyhral ? 'vyhrál vydraž. tým' : 'vyhrála protistrana'})`;
+      gameLabel = `Hra (${ociT1}:${70 - ociT1}${flekSuffix(flekHry)})`;
     }
   }
 
@@ -123,7 +128,7 @@ export function scoreSehravka(input, players) {
     const losers = uhran ? pagatOppo : pagatTeam;
     addDelta(delta, splitPayment(winners, losers, val));
     rows.push({
-      label: `Pagát ${ticky ? 'tichý' : 'hlášený'} ${uhran ? 'uhrán' : 'neuhrán'}`,
+      label: `Pagát ${ticky ? 'tichý' : 'hlášený'} ${uhran ? 'uhrán' : 'neuhrán'}${ticky ? '' : flekSuffix(flekPagat)}`,
       value: val, winners, losers,
     });
   }
@@ -138,7 +143,7 @@ export function scoreSehravka(input, players) {
     const losers = uhran ? valatOppo : valatTeam;
     addDelta(delta, splitPayment(winners, losers, val));
     rows.push({
-      label: `Valát ${ticky ? 'tichý' : 'hlášený'} ${uhran ? 'uhrán' : 'neuhrán'} (prémie)`,
+      label: `Valát ${ticky ? 'tichý' : 'hlášený'} ${uhran ? 'uhrán' : 'neuhrán'}${ticky ? '' : flekSuffix(flekValat)} (prémie)`,
       value: val, winners, losers,
     });
   }
@@ -157,7 +162,7 @@ export function scoreSehravka(input, players) {
       if (!def) continue;
       addDelta(delta, splitPayment(announcerTeam, oppoTeam, def.value));
       rows.push({
-        label: `${def.label} – ${players[id]}`,
+        label: def.label,
         value: def.value, winners: announcerTeam, losers: oppoTeam,
       });
     }
