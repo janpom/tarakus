@@ -16,6 +16,7 @@ const EMPTY = {
   povinnostIdx: 0,
   sehravky: [],
   current: null,
+  mode: 'kc',              // 'kc' | 'body' (5 hal = 1 bod)
 };
 
 export function load() {
@@ -49,9 +50,18 @@ export function nextPovinnost(idx) {
   return CCW_ORDER[(i + 1) % 4];
 }
 
+let currentMode = 'kc';
+
+export function setMode(mode) {
+  currentMode = mode === 'body' ? 'body' : 'kc';
+}
+
 export function formatHal(hal) {
   const sign = hal < 0 ? '−' : hal > 0 ? '+' : '';
   const abs = Math.abs(hal);
+  if (currentMode === 'body') {
+    return `${sign}${abs / 5}`;
+  }
   const kc = Math.floor(abs / 100);
   const h = abs % 100;
   return `${sign}${kc},${String(h).padStart(2, '0')} Kč`;

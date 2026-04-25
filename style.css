@@ -172,6 +172,8 @@ input:focus-visible {
   gap: 6px;
 }
 .chips.wrap-2 > .chip { flex: 1 1 calc(50% - 3px); }
+.chips.chips-center { justify-content: center; }
+.chips.chips-equal > .chip { flex: 1 1 0; min-width: 0; }
 
 .chip {
   background: var(--chip-bg);

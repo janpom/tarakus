@@ -1,4 +1,4 @@
-import { load, save, reset, nextPovinnost } from './state.js';
+import { load, save, reset, nextPovinnost, setMode } from './state.js';
 import { GAME_LABELS, HLASKA_GROUPS, TRUL_COMPAT } from './constants.js';
 import { scoreSehravka } from './scoring.js';
 import { mount } from './ui.js';
@@ -12,6 +12,7 @@ let state = load();
 const root = document.getElementById('app');
 
 function render() {
+  setMode(state.mode ?? 'kc');
   save(state);
   let view;
   if (!state.players) {
@@ -27,10 +28,11 @@ function render() {
 }
 
 const actions = {
-  startGame(names) {
+  startGame(names, mode) {
     state = {
       ...state,
       players: names,
+      mode: mode === 'body' ? 'body' : 'kc',
       totals: [0, 0, 0, 0],
       povinnostIdx: 0,
       sehravky: [],

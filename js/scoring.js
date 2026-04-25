@@ -15,9 +15,6 @@ function flekSuffix(flek) {
 
 const KC = 100;
 
-function roundUp10(n) {
-  return Math.ceil(n / 10) * 10;
-}
 
 function sazba(type, tretiPozice) {
   if (type === 'prvni' || type === 'druha') return RATE_HAL.prvni;
@@ -83,21 +80,21 @@ export function scoreSehravka(input, players) {
 
   if (valat?.uhran === true) {
     const diff = Math.max(0, 35 - (shozProtiValat ?? 0));
-    hodnotaHry = Math.min(roundUp10(diff * s * mHry), HERNI_STROP_HAL);
+    hodnotaHry = Math.min(diff * s * mHry, HERNI_STROP_HAL);
     gameWinners = valatTeam;
     gameLosers = valatOppo;
     gameLabel = `Hra (valát uhrán${flekSuffix(flekHry)})`;
   } else if (valat?.uhran === false) {
     // Valát selhal → hru vyhrává protistrana valátu
     const diff = Math.abs(ociT1 - 35) || 1;
-    hodnotaHry = Math.min(roundUp10(diff * s * mHry), HERNI_STROP_HAL);
+    hodnotaHry = Math.min(diff * s * mHry, HERNI_STROP_HAL);
     gameWinners = valatOppo;
     gameLosers = valatTeam;
     gameLabel = `Hra (valát selhal${flekSuffix(flekHry)})`;
   } else {
     const diff = Math.abs(ociT1 - 35);
     const effDiff = diff === 0 ? 1 : diff;
-    hodnotaHry = Math.min(roundUp10(effDiff * s * mHry), HERNI_STROP_HAL);
+    hodnotaHry = Math.min(effDiff * s * mHry, HERNI_STROP_HAL);
     if (diff === 0) {
       // 35:35: bez fleku platí vydražitel, s flekem platí protistrana
       gameWinners = flekHry > 0 ? team1 : team2;

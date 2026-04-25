@@ -39,8 +39,9 @@ Implementace vychází z pravidel **Vysočina** (turnaje GP Povodí Křetínky a
 - Varšava: 4 propojené slidery, součet vždy 70
 - Vyúčtování: per-hráč rozpis transakcí + součet týmu, delta pillíře pro každého hráče
 - Celkové skóre + historie sehrávek (mřížka delt 2×2 mirrorující rozesazení)
+- Volba měny: **koruny** (např. 1,50 Kč) nebo **body** (5 hal = 1 bod)
 - localStorage persistence, reset hry zachová jména hráčů
-- Herní strop 20 Kč, zaokrouhlení na 10 hal., všechny sazby dle Vysočiny
+- Herní strop 20 Kč, sazby dle Vysočiny
 
 ## Struktura
 
