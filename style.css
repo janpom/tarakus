@@ -436,28 +436,53 @@ input:focus-visible {
   max-height: 240px;
   overflow-y: auto;
 }
-.history-list li {
+.history-list .hist-item {
   background: var(--panel);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
-  padding: 6px 10px;
-  font-size: 0.8rem;
-  display: flex;
-  justify-content: space-between;
-  gap: 8px;
+  padding: 8px 10px;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 12px;
   align-items: center;
 }
-.hist-label { color: var(--muted); flex-shrink: 0; }
-.hist-deltas {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
+.hist-num {
   font-family: var(--mono);
-  font-size: 0.75rem;
-  justify-content: flex-end;
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: var(--muted-2);
 }
-.hist-deltas .d.pos { color: var(--pos); }
-.hist-deltas .d.neg { color: var(--neg); }
+.hist-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.hist-type {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--text);
+}
+.hist-forhont {
+  font-size: 0.8rem;
+  color: var(--accent);
+}
+.hist-grid {
+  display: grid;
+  grid-template-columns: repeat(2, auto);
+  grid-template-rows: repeat(2, auto);
+  gap: 2px 8px;
+}
+.hist-cell {
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  color: var(--muted);
+  min-width: 56px;
+}
+.hist-cell.pos { color: var(--pos); }
+.hist-cell.neg { color: var(--neg); }
 
 /* ---------- Wizard ---------- */
 .wizard {

@@ -2,6 +2,24 @@ import { h } from '../ui.js';
 import { formatHal } from '../state.js';
 import { GAME_INFO } from '../constants.js';
 
+function historyItem(s, num, players) {
+  return h('li', { class: 'hist-item' },
+    h('div', { class: 'hist-num' }, `#${num}`),
+    h('div', { class: 'hist-meta' },
+      h('div', { class: 'hist-type' }, GAME_INFO[s.type]?.short ?? s.typeLabel),
+      h('div', { class: 'hist-forhont' }, players[s.forhont]),
+    ),
+    h('div', { class: 'hist-grid grid2x2' },
+      ...[0, 1, 2, 3].map(i => {
+        const d = s.delta[i] ?? 0;
+        return h('div', {
+          class: `hist-cell slot-${i} ${d > 0 ? 'pos' : d < 0 ? 'neg' : ''}`,
+        }, formatHal(d));
+      }),
+    ),
+  );
+}
+
 export function viewMain(state, actions) {
   const povId = state.povinnostIdx;
   return h('div', { class: 'main-view' },
@@ -17,28 +35,16 @@ export function viewMain(state, actions) {
       },
         h('div', { class: 'player-name' }, state.players[i]),
         h('div', { class: 'player-total' }, formatHal(state.totals[i])),
-        i === povId ? h('div', { class: 'badge' }, 'povinnost') : null,
       )),
     ),
     h('section', { class: 'actions' },
-      h('button', { class: 'primary big', onclick: actions.startSehravka }, '+ Sehrávka'),
+      h('button', { class: 'primary big', onclick: actions.startSehravka }, 'Nová sehrávka'),
     ),
     state.sehravky.length > 0
       ? h('section', { class: 'history' },
           h('h2', {}, 'Historie'),
           h('ol', { class: 'history-list' },
-            ...state.sehravky.slice().reverse().map((s, idx) => h('li', {},
-              h('span', { class: 'hist-label' },
-                `#${state.sehravky.length - idx} `,
-                GAME_INFO[s.type]?.short ?? s.typeLabel,
-                s.vydrazitel != null ? ` · ${state.players[s.vydrazitel]}` : '',
-              ),
-              h('span', { class: 'hist-deltas' },
-                ...s.delta.map((d, i) => h('span', {
-                  class: `d ${d > 0 ? 'pos' : d < 0 ? 'neg' : ''}`,
-                }, `${state.players[i].slice(0, 3)} ${formatHal(d)}`)),
-              ),
-            )),
+            ...state.sehravky.slice().reverse().map((s, idx) => historyItem(s, state.sehravky.length - idx, state.players)),
           ),
         )
       : null,
