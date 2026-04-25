@@ -172,23 +172,18 @@ function zavazujiciField(state, actions) {
       onclick: () => onPick(i),
     }, pname(state, i))),
   );
-  return field('Zavazující hlášky',
-    h('div', { class: 'row-stack' },
-      h('div', { class: 'labeled-row' },
-        h('span', { class: 'row-label' }, 'Pagát'),
-        druha
-          ? h('span', { class: 'row-info' },
-              d.vydrazitel != null
-                ? h('span', {}, pname(state, d.vydrazitel), ' (povinně)')
-                : 'vydražitel (povinně)')
-          : playerChips(pagP, setPlayer('pagat')),
-      ),
-      h('div', { class: 'labeled-row' },
-        h('span', { class: 'row-label' }, 'Valát'),
-        playerChips(valP, setPlayer('valat')),
-      ),
+  return [
+    field('Hlášený pagát',
+      druha
+        ? infoChip(
+            d.vydrazitel != null
+              ? h('span', {}, pname(state, d.vydrazitel), ' (povinně)')
+              : 'vydražitel (povinně)',
+          )
+        : playerChips(pagP, setPlayer('pagat')),
     ),
-  );
+    field('Hlášený valát', playerChips(valP, setPlayer('valat'))),
+  ];
 }
 
 // ===== Krok 2: Hlášky + Fleky =====
@@ -223,8 +218,20 @@ function stepHlaskyFleky(state, actions) {
     field('Flekování',
       h('div', { class: 'row-stack' },
         flekRow('Hra', d.flekHry ?? 0, v => actions.updateDraft({ flekHry: v })),
-        pagHl ? flekRow('Pagát', d.flekPagat ?? 0, v => actions.updateDraft({ flekPagat: v })) : null,
-        valHl ? flekRow('Valát', d.flekValat ?? 0, v => actions.updateDraft({ flekValat: v })) : null,
+        pagHl
+          ? flekRow(
+              pagatValatLabel('Pagát', d.vysledek.pagat.player, state),
+              d.flekPagat ?? 0,
+              v => actions.updateDraft({ flekPagat: v }),
+            )
+          : null,
+        valHl
+          ? flekRow(
+              pagatValatLabel('Valát', d.vysledek.valat.player, state),
+              d.flekValat ?? 0,
+              v => actions.updateDraft({ flekValat: v }),
+            )
+          : null,
       ),
     ),
   );
@@ -250,8 +257,11 @@ function hlaskyPanel(state, actions, playerIdx) {
 }
 
 function flekRow(label, val, setVal) {
+  const labelEl = typeof label === 'string'
+    ? h('span', { class: 'row-label' }, label)
+    : label;
   return h('div', { class: 'labeled-row' },
-    h('span', { class: 'row-label' }, label),
+    labelEl,
     h('div', { class: 'chips' },
       ...FLEK_LABELS.slice(1).map((lbl, idx) => {
         const i = idx + 1;
