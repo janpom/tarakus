@@ -147,11 +147,14 @@ function zavazujiciField(state, actions) {
   const d = state.current;
   const setHl = (key) => (val) => {
     const cur = d.vysledek?.[key] ?? null;
-    if (val === null) {
+    const curHl = cur?.hlaseno ?? null;
+    // Druhé kliknutí na stejný chip = odznačit.
+    const newHl = curHl === val ? null : val;
+    if (newHl === null) {
       if (cur?.uhran === true) actions.updateVysledek({ [key]: { uhran: true, hlaseno: null } });
       else actions.updateVysledek({ [key]: null });
     } else {
-      actions.updateVysledek({ [key]: { uhran: cur?.uhran ?? null, hlaseno: val } });
+      actions.updateVysledek({ [key]: { uhran: cur?.uhran ?? null, hlaseno: newHl } });
     }
   };
   const pagHl = d.vysledek?.pagat?.hlaseno ?? null;
@@ -161,7 +164,6 @@ function zavazujiciField(state, actions) {
       h('div', { class: 'labeled-row' },
         h('span', { class: 'row-label' }, 'Pagát'),
         h('div', { class: 'chips' },
-          hlChip(pagHl, null, '—', () => setHl('pagat')(null)),
           hlChip(pagHl, 'vydr', 'vydražitel', () => setHl('pagat')('vydr')),
           hlChip(pagHl, 'prot', 'obrana', () => setHl('pagat')('prot')),
         ),
@@ -169,7 +171,6 @@ function zavazujiciField(state, actions) {
       h('div', { class: 'labeled-row' },
         h('span', { class: 'row-label' }, 'Valát'),
         h('div', { class: 'chips' },
-          hlChip(valHl, null, '—', () => setHl('valat')(null)),
           hlChip(valHl, 'vydr', 'vydražitel', () => setHl('valat')('vydr')),
           hlChip(valHl, 'prot', 'obrana', () => setHl('valat')('prot')),
         ),
@@ -237,11 +238,14 @@ function flekRow(label, val, setVal) {
   return h('div', { class: 'labeled-row' },
     h('span', { class: 'row-label' }, label),
     h('div', { class: 'chips' },
-      ...FLEK_LABELS.map((lbl, i) => h('button', {
-        class: `chip ${val === i ? 'active' : ''}`,
-        type: 'button',
-        onclick: () => setVal(i),
-      }, lbl)),
+      ...FLEK_LABELS.slice(1).map((lbl, idx) => {
+        const i = idx + 1;
+        return h('button', {
+          class: `chip ${val === i ? 'active' : ''}`,
+          type: 'button',
+          onclick: () => setVal(val === i ? 0 : i),
+        }, lbl);
+      }),
     ),
   );
 }

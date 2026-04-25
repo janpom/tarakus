@@ -72,7 +72,7 @@ export const HLASKA_GROUPS = {
 
 // Pozice talonu pro preferanc
 export const TRETI_POZICE = {
-  1: 'v prvních (3)',
-  2: 've druhých (3)',
-  3: 've třetích (3)',
+  1: 'v prvních',
+  2: 've druhých',
+  3: 've třetích',
 };
