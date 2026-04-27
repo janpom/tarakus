@@ -39,10 +39,10 @@ function deltasSection(state, result) {
   const players = state.players;
   return h('section', { class: 'field' },
     h('div', { class: 'field-label' }, 'Změna skóre'),
-    h('div', { class: 'deltas' },
+    h('div', { class: 'deltas grid2x2' },
       ...players.map((name, i) => {
         const d = result.delta[i] ?? 0;
-        return h('div', { class: `delta-pill ${d > 0 ? 'pos' : d < 0 ? 'neg' : ''}` },
+        return h('div', { class: `delta-pill slot-${i} ${d > 0 ? 'pos' : d < 0 ? 'neg' : ''}` },
           h('div', { class: 'd-name' }, pname(state, i)),
           h('div', { class: 'd-val' }, formatHal(d)),
         );
