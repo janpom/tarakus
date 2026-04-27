@@ -67,9 +67,13 @@ function breakdownSection(state, result) {
     }));
   } else {
     const [team1, team2] = determineTeams(s.type, ids, s.vydrazitel, s.partner);
+    // Multiplikátor jen pro sólo tým (1 člen vs více protihráčů). Sólo
+    // má hru proti N protihráčům najednou, takže jeho per-člen změna =
+    // hodnota × N. Pro vícečlenný tým je per-člen změna jen rovna hodnotě.
+    const mult = (size, oppSize) => size === 1 && oppSize > 1 ? oppSize : 1;
     groups = [
-      { title: team1.length === 1 ? 'Vydražitel' : 'Vydražitelský tým', members: team1, multiplier: team2.length },
-      { title: team2.length === 1 ? 'Obrana' : 'Obrana', members: team2, multiplier: team1.length },
+      { title: team1.length === 1 ? 'Vydražitel' : 'Vydražitelský tým', members: team1, multiplier: mult(team1.length, team2.length) },
+      { title: team2.length === 1 ? 'Obrana' : 'Obrana', members: team2, multiplier: mult(team2.length, team1.length) },
     ];
   }
 
@@ -87,16 +91,16 @@ function breakdownGroup(state, group, rows, isVarsava) {
   const memberSet = new Set(group.members);
   const mult = group.multiplier ?? 1;
   const items = [];
-  let total = 0;
+  let rowSum = 0;
   for (const r of rows) {
     const sign = r.winners?.some(i => memberSet.has(i))
       ? +1
       : r.losers?.some(i => memberSet.has(i)) ? -1 : 0;
     if (sign === 0) continue;
-    // Per-row hodnota je per-člen-týmu změna (=  jediná transakce × počet
-    // protihráčů). Součet pak rovnou = celková změna skóre člena týmu.
-    const value = sign * (r.value ?? 0) * mult;
-    total += value;
+    // Řádek = hodnota jediné transakce. Součet = řádky × multiplikátor
+    // (pro sólo proti více protihráčům).
+    const value = sign * (r.value ?? 0);
+    rowSum += value;
     let label = r.label;
     if (isVarsava) {
       const other = sign > 0 ? r.losers : r.winners;
@@ -106,7 +110,8 @@ function breakdownGroup(state, group, rows, isVarsava) {
     }
     items.push({ label, value });
   }
-  const sumLabel = 'Součet';
+  const total = rowSum * mult;
+  const sumLabel = mult > 1 ? `Součet × ${mult}` : 'Součet';
   return h('div', { class: `team-card ${total > 0 ? 'pos' : total < 0 ? 'neg' : ''}` },
     h('div', { class: 'team-title' },
       h('span', {}, group.title),

@@ -51,16 +51,15 @@ export function determineTeams(type, players, vydrazitel, partner) {
   return [team1, team2];
 }
 
-// Každý vítěz dostává od každého soupeře `hodnota`. Součet = 0.
+// Rozdělení platby. Sólo tým (1 hráč) získává/platí hodnota × počet protihráčů
+// (hraje proti všem najednou). Vícečlenné týmy získávají/platí jen hodnota
+// na hráče (každý člen týmu má jednoho přiřazeného protihráče v páru).
 function splitPayment(winners, losers, hodnota) {
   const delta = {};
-  for (const id of [...winners, ...losers]) delta[id] = 0;
-  for (const w of winners) {
-    for (const l of losers) {
-      delta[w] += hodnota;
-      delta[l] -= hodnota;
-    }
-  }
+  const wMult = winners.length === 1 && losers.length > 1 ? losers.length : 1;
+  const lMult = losers.length === 1 && winners.length > 1 ? winners.length : 1;
+  for (const w of winners) delta[w] = hodnota * wMult;
+  for (const l of losers) delta[l] = -hodnota * lMult;
   return delta;
 }
 
