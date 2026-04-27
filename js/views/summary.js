@@ -75,14 +75,10 @@ function breakdownSection(state, result) {
 
   const klass = groups.length === 4 ? 'teams teams-4' : 'teams teams-2';
   const isVarsava = s.type === 'varsava';
-  // Multiplikátor zobrazujeme jen pokud se týmy v multiplikátoru liší
-  // (např. 1v3). Pro symetrické rozdělení (2v2, Varšava) dává "× N" stejný
-  // vztah pro všechny – informace navíc nenese.
-  const showMult = !groups.every(g => g.multiplier === groups[0].multiplier);
   return h('section', { class: 'field' },
     h('div', { class: 'field-label' }, 'Rozpis'),
     h('div', { class: klass },
-      ...groups.map(g => breakdownGroup(state, { ...g, showMult }, rows, isVarsava)),
+      ...groups.map(g => breakdownGroup(state, g, rows, isVarsava)),
     ),
   );
 }
@@ -91,14 +87,16 @@ function breakdownGroup(state, group, rows, isVarsava) {
   const memberSet = new Set(group.members);
   const mult = group.multiplier ?? 1;
   const items = [];
-  let rowSum = 0;
+  let total = 0;
   for (const r of rows) {
     const sign = r.winners?.some(i => memberSet.has(i))
       ? +1
       : r.losers?.some(i => memberSet.has(i)) ? -1 : 0;
     if (sign === 0) continue;
-    const value = sign * (r.value ?? 0);
-    rowSum += value;
+    // Per-row hodnota je per-člen-týmu změna (=  jediná transakce × počet
+    // protihráčů). Součet pak rovnou = celková změna skóre člena týmu.
+    const value = sign * (r.value ?? 0) * mult;
+    total += value;
     let label = r.label;
     if (isVarsava) {
       const other = sign > 0 ? r.losers : r.winners;
@@ -108,8 +106,7 @@ function breakdownGroup(state, group, rows, isVarsava) {
     }
     items.push({ label, value });
   }
-  const total = rowSum * mult;
-  const sumLabel = (group.showMult && mult > 1) ? `Součet × ${mult}` : 'Součet';
+  const sumLabel = 'Součet';
   return h('div', { class: `team-card ${total > 0 ? 'pos' : total < 0 ? 'neg' : ''}` },
     h('div', { class: 'team-title' },
       h('span', {}, group.title),
