@@ -33,6 +33,58 @@ function historyItem(s, num, players) {
   );
 }
 
+function startSwapDrag(e, srcIdx, onSwap) {
+  if (e.button != null && e.button !== 0) return;
+  const el = e.currentTarget;
+  const startX = e.clientX;
+  const startY = e.clientY;
+  let dragging = false;
+  let lastTarget = null;
+  const onMove = (ev) => {
+    const dx = ev.clientX - startX;
+    const dy = ev.clientY - startY;
+    if (!dragging && Math.hypot(dx, dy) < 6) return;
+    if (!dragging) {
+      dragging = true;
+      el.classList.add('dragging');
+    }
+    el.style.transform = `translate(${dx}px, ${dy}px)`;
+    el.style.pointerEvents = 'none';
+    const under = document.elementFromPoint(ev.clientX, ev.clientY);
+    el.style.pointerEvents = '';
+    const card = under?.closest?.('.player-card');
+    if (lastTarget && lastTarget !== card) lastTarget.classList.remove('drop-target');
+    if (card && card !== el) {
+      card.classList.add('drop-target');
+      lastTarget = card;
+    } else {
+      lastTarget = null;
+    }
+  };
+  const cleanup = () => {
+    el.releasePointerCapture?.(e.pointerId);
+    el.removeEventListener('pointermove', onMove);
+    el.removeEventListener('pointerup', onUp);
+    el.removeEventListener('pointercancel', onUp);
+    el.classList.remove('dragging');
+    el.style.transform = '';
+    if (lastTarget) lastTarget.classList.remove('drop-target');
+  };
+  const onUp = () => {
+    const target = lastTarget;
+    const didDrag = dragging;
+    cleanup();
+    if (didDrag && target) {
+      const destIdx = Number(target.dataset.slot);
+      if (!Number.isNaN(destIdx)) onSwap(srcIdx, destIdx);
+    }
+  };
+  el.setPointerCapture?.(e.pointerId);
+  el.addEventListener('pointermove', onMove);
+  el.addEventListener('pointerup', onUp);
+  el.addEventListener('pointercancel', onUp);
+}
+
 export function viewMain(state, actions) {
   const povId = state.povinnostIdx;
   return h('div', { class: 'main-view' },
@@ -44,7 +96,9 @@ export function viewMain(state, actions) {
     ),
     h('section', { class: 'grid2x2 scoreboard' },
       ...[0, 1, 2, 3].map(i => h('div', {
-        class: `player-card slot-${i} ${i === povId ? 'povinnost' : ''}`,
+        class: `player-card slot-${i} swappable ${i === povId ? 'povinnost' : ''}`,
+        'data-slot': i,
+        onpointerdown: (e) => startSwapDrag(e, i, actions.swapSlots),
       },
         h('div', { class: 'player-name' },
           pname(state.players[i], computeRole(povId, null, i)),

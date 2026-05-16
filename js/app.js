@@ -244,6 +244,47 @@ const actions = {
     render();
   },
 
+  swapSlots(i, j) {
+    if (i === j || i == null || j == null) return;
+    if (state.current) return; // jen mimo rozdělanou sehrávku
+    const swap = (k) => k === i ? j : k === j ? i : k;
+    const swapArr = (arr) => {
+      const out = arr.slice();
+      [out[i], out[j]] = [out[j], out[i]];
+      return out;
+    };
+    const remapPid = (v) => v == null ? v : swap(v);
+    const remapHlasky = (h) => {
+      if (!h) return h;
+      const out = {};
+      for (const [pid, val] of Object.entries(h)) {
+        out[swap(Number(pid))] = val;
+      }
+      return out;
+    };
+    const remapRows = (rows) => (rows ?? []).map(r => ({
+      ...r,
+      winners: r.winners?.map(swap),
+      losers: r.losers?.map(swap),
+    }));
+    state.players = swapArr(state.players);
+    state.totals = swapArr(state.totals);
+    state.povinnostIdx = swap(state.povinnostIdx);
+    state.sehravky = state.sehravky.map(s => ({
+      ...s,
+      forhont: remapPid(s.forhont),
+      vydrazitel: remapPid(s.vydrazitel),
+      partner: remapPid(s.partner),
+      delta: swapArr(s.delta ?? [0, 0, 0, 0]),
+      hlasky: remapHlasky(s.hlasky),
+      vysledek: s.vysledek
+        ? { ...s.vysledek, ociHrace: s.vysledek.ociHrace ? swapArr(s.vysledek.ociHrace) : s.vysledek.ociHrace }
+        : s.vysledek,
+      rows: remapRows(s.rows),
+    }));
+    render();
+  },
+
   commitSehravka() {
     const s = state.current;
     const deltaArr = [0, 0, 0, 0].map((_, i) => s.computed.delta[i] ?? 0);
